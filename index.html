@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Session board</title>
+<style>
+:root {
+  --bg: #FAF9F7; --surface: #FFFFFE; --text: #1A1A1A; --muted: #5A5A5A;
+  --border: #E2E0DC; --accent: #4A7C6F; --tint: #EDF5F2; --focus: #2F5A4F;
+  --radius: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181A; --surface: #1F2224; --text: #EDEDED; --muted: #A8ACAE;
+    --border: #33373A; --accent: #7FB5A6; --tint: #1E2B28; --focus: #A9D6CA; }
+}
+* { box-sizing: border-box; }
+html { font-size: 18px; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45; }
+.wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 48px; }
+h1 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; letter-spacing: .02em; }
+h2 { font-size: 1.5rem; margin: 28px 0 6px; }
+h3 { font-size: 1.1rem; margin: 22px 0 10px; }
+p.hint { color: var(--muted); margin: 0 0 12px; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* agenda */
+.agenda { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.agenda button { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 12px 10px; text-align: left; min-height: 64px; }
+.agenda .step { display: block; font-weight: 650; font-size: 1.05rem; }
+.agenda .min { display: block; color: var(--muted); font-size: .85rem; }
+.agenda button[aria-current="step"] { border-color: var(--accent); background: var(--tint); }
+.agenda button[aria-current="step"] .min::after { content: " \00b7  now"; font-weight: 600; color: var(--accent); }
+
+/* tiles */
+.tiles { display: flex; flex-wrap: wrap; gap: 10px; }
+.tile { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 12px 16px; min-height: 52px; min-width: 88px; font-size: 1rem; }
+.tile[aria-pressed="true"] { border-color: var(--accent); background: var(--tint); font-weight: 650; }
+.tile[aria-pressed="true"]::before { content: "\2713  "; color: var(--accent); }
+.tile:disabled { opacity: .45; cursor: default; }
+.scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; max-width: 640px; }
+.scale .tile { min-width: 0; padding: 10px 0; text-align: center; }
+.scale .tile[aria-pressed="true"]::before { content: ""; }
+.scale-ends { display: flex; justify-content: space-between; max-width: 640px; color: var(--muted); font-size: .85rem; margin-top: 4px; }
+.note { color: var(--muted); font-size: .9rem; margin-top: 8px; min-height: 1.2em; }
+
+/* cards */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 16px; text-align: left; min-height: 110px; }
+.card strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
+.card span { color: var(--muted); font-size: .9rem; }
+.card[aria-pressed="true"] { border-color: var(--accent); background: var(--tint); }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 18px; }
+
+/* comic */
+.comic { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.frame { border: 2px solid var(--text); border-radius: 6px; padding: 12px; background: var(--surface); }
+.frame .label { font-weight: 700; margin-bottom: 8px; }
+label.field { display: block; font-size: .9rem; color: var(--muted); margin: 8px 0 4px; }
+textarea, input[type="text"], select { width: 100%; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+textarea { min-height: 64px; resize: vertical; }
+.bubble { border-radius: 18px; }
+.frame .tiles .tile { min-height: 40px; min-width: 0; padding: 6px 10px; font-size: .9rem; }
+
+/* food */
+.ladder { display: grid; gap: 10px; }
+.rung { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+.rung .num { font-weight: 700; color: var(--muted); text-align: center; }
+.rung .goal { font-size: .8rem; font-weight: 650; color: var(--accent); margin-top: 4px; }
+.rung .worry { grid-column: 2 / 4; display: grid; grid-template-columns: repeat(2, minmax(0, 200px)); gap: 10px; }
+.done-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 10px 14px; min-height: 48px; white-space: nowrap; }
+.done-count { display: block; font-size: .8rem; color: var(--muted); text-align: center; margin-top: 2px; }
+
+/* nav + footer */
+.nav { display: flex; gap: 10px; margin-top: 28px; }
+.btn { background: var(--accent); color: #fff; border: 0; border-radius: 12px; padding: 12px 22px; min-height: 50px; font-weight: 650; }
+.btn.quiet { background: transparent; color: var(--text); border: 2px solid var(--border); }
+@media (prefers-color-scheme: dark) { .btn { color: #0f1413; } .btn.quiet { color: var(--text); } }
+details.summary { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px; }
+details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600; }
+#summaryText { min-height: 160px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; margin-top: 10px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.status { color: var(--muted); font-size: .9rem; }
+[hidden] { display: none !important; }
+
+@media (max-width: 640px) {
+  .cards, .comic { grid-template-columns: 1fr; }
+  .agenda { gap: 6px; }
+  .agenda button { padding: 8px 8px; min-height: 56px; }
+  .agenda .step { font-size: .9rem; }
+  .agenda .min { font-size: .75rem; }
+  .scale { grid-template-columns: repeat(6, 1fr); }
+  .rung .worry { grid-template-columns: 1fr 1fr; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tile, .card, .agenda button, .done-btn { transition: border-color .12s, background-color .12s; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Session board</h1>
+
+  <nav class="agenda" aria-label="Today">
+    <button type="button" data-go="checkin"><span class="step">Check-in</span><span class="min">5 min</span></button>
+    <button type="button" data-go="onething"><span class="step">One thing</span><span class="min">20 min</span></button>
+    <button type="button" data-go="pick"><span class="step">Your pick</span><span class="min">10 min</span></button>
+  </nav>
+
+  <!-- CHECK-IN -->
+  <section id="checkin" data-screen>
+    <h2>Check-in</h2>
+    <h3>This week was more...</h3>
+    <p class="hint">Pick one or two.</p>
+    <div class="tiles" data-group="feelings" data-max="2">
+      <button class="tile" data-value="sad">sad</button>
+      <button class="tile" data-value="worried">worried</button>
+      <button class="tile" data-value="tired">tired</button>
+      <button class="tile" data-value="annoyed">annoyed</button>
+      <button class="tile" data-value="okay">okay</button>
+      <button class="tile" data-value="something else">something else</button>
+    </div>
+    <div class="note" data-note="feelings"></div>
+
+    <h3>How strong: 0 to 10</h3>
+    <div class="tiles scale" data-group="strength" data-max="1"></div>
+    <div class="scale-ends"><span>0 not at all</span><span>10 the most</span></div>
+
+    <div class="nav"><button class="btn" type="button" data-go="onething">Next</button></div>
+  </section>
+
+  <!-- ONE THING -->
+  <section id="onething" data-screen hidden>
+    <h2>One thing</h2>
+    <p class="hint">Pick one.</p>
+    <div class="cards" data-group="card" data-max="1">
+      <button class="card" data-value="comic"><strong>Comic</strong><span>A school day in 4 panels</span></button>
+      <button class="card" data-value="picking"><strong>Skin picking map</strong><span>When, how often, and what else my hands could do</span></button>
+      <button class="card" data-value="food"><strong>Food quest</strong><span>One step at a time</span></button>
+    </div>
+
+    <div class="panel" data-card="comic" hidden>
+      <h3>A school day in 4 panels</h3>
+      <p class="hint">Draw it on your iPad if you want. Fill in the boxes here.</p>
+      <div class="comic" id="comic"></div>
+    </div>
+
+    <div class="panel" data-card="picking" hidden>
+      <h3>When does it happen most?</h3>
+      <div class="tiles" data-group="pickWhen" data-max="5">
+        <button class="tile" data-value="school">school</button>
+        <button class="tile" data-value="bed">bed</button>
+        <button class="tile" data-value="screens">screens</button>
+        <button class="tile" data-value="homework">homework</button>
+        <button class="tile" data-value="something else">something else</button>
+      </div>
+      <h3>How often this week?</h3>
+      <div class="tiles" data-group="pickOften" data-max="1">
+        <button class="tile" data-value="0">0</button>
+        <button class="tile" data-value="1 to 2">1 to 2</button>
+        <button class="tile" data-value="3 to 5">3 to 5</button>
+        <button class="tile" data-value="most days">most days</button>
+      </div>
+      <h3>What could my hands do instead?</h3>
+      <div class="tiles" data-group="pickInstead" data-max="5">
+        <button class="tile" data-value="fidget">fidget</button>
+        <button class="tile" data-value="putty">putty</button>
+        <button class="tile" data-value="draw">draw</button>
+        <button class="tile" data-value="hold something cold">hold something cold</button>
+        <button class="tile" data-value="other">other</button>
+      </div>
+    </div>
+
+    <div class="panel" data-card="food" hidden>
+      <h3>Food quest</h3>
+      <p class="hint">Change any step. Worry is optional.</p>
+      <div class="ladder" id="ladder"></div>
+    </div>
+
+    <div class="nav">
+      <button class="btn quiet" type="button" data-go="checkin">Back</button>
+      <button class="btn" type="button" data-go="pick">Next</button>
+    </div>
+  </section>
+
+  <!-- YOUR PICK -->
+  <section id="pick" data-screen hidden>
+    <h2>Your pick</h2>
+    <h3>The last part</h3>
+    <div class="tiles" data-group="last" data-max="1">
+      <button class="tile" data-value="draw">draw</button>
+      <button class="tile" data-value="show something I made">show something I made</button>
+      <button class="tile" data-value="talk about a show or game">talk about a show or game</button>
+      <button class="tile" data-value="something else">something else</button>
+    </div>
+
+    <h3>One time this week I could tell ... how I feel</h3>
+    <div class="tiles" data-group="tell" data-max="1">
+      <button class="tile" data-value="mom">mom</button>
+      <button class="tile" data-value="dad">dad</button>
+      <button class="tile" data-value="a friend">a friend</button>
+      <button class="tile" data-value="my therapist">my therapist</button>
+      <button class="tile" data-value="someone else">someone else</button>
+    </div>
+
+    <h3>Something to try this week</h3>
+    <p class="hint">Pick one.</p>
+    <div class="tiles" data-group="tryThis" data-max="1" id="tryTiles"></div>
+
+    <div class="nav"><button class="btn quiet" type="button" data-go="onething">Back</button></div>
+  </section>
+
+  <details class="summary" id="summaryBox">
+    <summary>Summary for notes</summary>
+    <textarea id="summaryText" readonly aria-label="Summary for notes"></textarea>
+    <div class="row">
+      <button class="btn quiet" type="button" id="copyBtn">Copy summary</button>
+      <span class="status" id="copyStatus" aria-live="polite"></span>
+    </div>
+    <div class="row">
+      <button class="btn quiet" type="button" id="clearBtn">Clear everything</button>
+      <span id="clearConfirm" hidden>
+        <span class="status">Clear all answers?</span>
+        <button class="btn" type="button" id="clearYes">Clear</button>
+        <button class="btn quiet" type="button" id="clearNo">Cancel</button>
+      </span>
+    </div>
+    <p class="status">Answers stay in this browser tab and are gone when the tab closes. Nothing is sent anywhere.</p>
+  </details>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var KEY = "session-board-v1";
+  var FEELINGS = ["sad", "worried", "tired", "annoyed", "okay", "something else"];
+
+  function fresh() {
+    return {
+      screen: "checkin",
+      feelings: [], strength: [],
+      card: [],
+      comic: [0, 1, 2, 3].map(function () { return { what: "", thought: "", feeling: [] }; }),
+      pickWhen: [], pickOften: [], pickInstead: [],
+      food: [
+        { name: "Frozen blueberries", done: 0, before: "", after: "" },
+        { name: "", done: 0, before: "", after: "" },
+        { name: "Kiwi", done: 0, before: "", after: "" },
+        { name: "Sushi", done: 0, before: "", after: "", goal: true }
+      ],
+      last: [], tell: [], tryThis: []
+    };
+  }
+
+  var state = fresh();
+  try {
+    var saved = sessionStorage.getItem(KEY);
+    if (saved) { state = Object.assign(fresh(), JSON.parse(saved)); }
+  } catch (e) { /* storage blocked: the page still works, nothing persists */ }
+
+  function save() {
+    try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+    renderSummary();
+  }
+
+  // ---------- builders
+  function buildScale(el, group) {
+    el.innerHTML = "";
+    for (var i = 0; i <= 10; i++) {
+      var b = document.createElement("button");
+      b.className = "tile"; b.type = "button"; b.dataset.value = String(i); b.textContent = String(i);
+      el.appendChild(b);
+    }
+    el.dataset.group = group;
+  }
+
+  function buildComic() {
+    var root = document.getElementById("comic");
+    root.innerHTML = "";
+    state.comic.forEach(function (p, i) {
+      var f = document.createElement("div");
+      f.className = "frame";
+      f.innerHTML =
+        '<div class="label">Panel ' + (i + 1) + '</div>' +
+        '<label class="field" for="what' + i + '">What happened</label>' +
+        '<textarea id="what' + i + '" data-comic="' + i + '" data-key="what"></textarea>' +
+        '<label class="field" for="thought' + i + '">Thought bubble</label>' +
+        '<textarea class="bubble" id="thought' + i + '" data-comic="' + i + '" data-key="thought"></textarea>' +
+        '<label class="field">Feeling</label>' +
+        '<div class="tiles" data-group="comicFeeling' + i + '" data-max="1">' +
+        FEELINGS.map(function (v) { return '<button class="tile" data-value="' + v + '">' + v + '</button>'; }).join("") +
+        '</div>';
+      root.appendChild(f);
+      f.querySelector('[data-key="what"]').value = p.what;
+      f.querySelector('[data-key="thought"]').value = p.thought;
+    });
+  }
+
+  function worrySelect(i, key, label) {
+    var opts = '<option value="">-</option>';
+    for (var n = 0; n <= 10; n++) { opts += '<option value="' + n + '">' + n + '</option>'; }
+    return '<div><label class="field" for="' + key + i + '">' + label + '</label>' +
+      '<select id="' + key + i + '" data-food="' + i + '" data-key="' + key + '">' + opts + '</select></div>';
+  }
+
+  function buildLadder() {
+    var root = document.getElementById("ladder");
+    root.innerHTML = "";
+    state.food.forEach(function (s, i) {
+      var r = document.createElement("div");
+      r.className = "rung";
+      r.innerHTML =
+        '<div class="num">' + (i + 1) + '</div>' +
+        '<div><input type="text" aria-label="Step ' + (i + 1) + '" placeholder="Pick a food" data-food="' + i + '" data-key="name">' +
+        (s.goal ? '<div class="goal">Your goal</div>' : '') + '</div>' +
+        '<div><button type="button" class="done-btn" data-done="' + i + '">Mark done</button>' +
+        '<span class="done-count" id="count' + i + '"></span></div>' +
+        '<div class="worry">' + worrySelect(i, "before", "Worry before") + worrySelect(i, "after", "Worry after") + '</div>';
+      root.appendChild(r);
+      r.querySelector('[data-key="name"]').value = s.name;
+      r.querySelector('[data-key="before"]').value = s.before;
+      r.querySelector('[data-key="after"]').value = s.after;
+    });
+    renderCounts();
+  }
+
+  function renderCounts() {
+    state.food.forEach(function (s, i) {
+      var c = document.getElementById("count" + i);
+      if (c) { c.textContent = s.done ? "Done " + s.done + (s.done === 1 ? " time" : " times") : ""; }
+    });
+  }
+
+  // ---------- group state helpers
+  function getGroup(name) {
+    var m = /^comicFeeling(\d)$/.exec(name);
+    if (m) { return state.comic[+m[1]].feeling; }
+    return state[name];
+  }
+  function setGroup(name, val) {
+    var m = /^comicFeeling(\d)$/.exec(name);
+    if (m) { state.comic[+m[1]].feeling = val; return; }
+    state[name] = val;
+  }
+
+  function renderGroup(el) {
+    var name = el.dataset.group, max = +el.dataset.max || 1, sel = getGroup(name) || [];
+    el.querySelectorAll("[data-value]").forEach(function (b) {
+      var on = sel.indexOf(b.dataset.value) !== -1;
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+      b.disabled = !on && max > 1 && sel.length >= max;
+    });
+    var note = document.querySelector('[data-note="' + name + '"]');
+    if (note) { note.textContent = (max > 1 && sel.length >= max) ? "Up to " + max + ". Tap one to change it." : ""; }
+  }
+
+  function renderAll() {
+    document.querySelectorAll("[data-group]").forEach(renderGroup);
+    var card = state.card[0] || "";
+    document.querySelectorAll("[data-card]").forEach(function (p) { p.hidden = p.dataset.card !== card; });
+    document.querySelectorAll("[data-screen]").forEach(function (s) { s.hidden = s.id !== state.screen; });
+    document.querySelectorAll(".agenda [data-go]").forEach(function (b) {
+      if (b.dataset.go === state.screen) { b.setAttribute("aria-current", "step"); } else { b.removeAttribute("aria-current"); }
+    });
+    buildTryTiles();
+    renderSummary();
+  }
+
+  // ---------- "something to try" options follow what was chosen
+  function tryOptions() {
+    var opts = [];
+    var who = state.tell[0];
+    opts.push(who ? "Tell " + who + " one feeling" : "Tell someone one feeling");
+    var instead = state.pickInstead.filter(function (v) { return v !== "other"; })[0];
+    if (state.pickWhen.length || state.pickInstead.length) {
+      opts.push(instead ? "Use " + instead + " when my hands want to pick" : "Notice when my hands want to pick");
+    }
+    var next = state.food.filter(function (s) { return s.name && !s.done; })[0];
+    if (next) { opts.push("Try " + next.name.toLowerCase() + " one time"); }
+    if (opts.length < 3) { opts.push("Draw one panel on a hard day"); }
+    if (opts.length < 3) { opts.push("Rate my worry once a day"); }
+    return opts.slice(0, 3);
+  }
+
+  function buildTryTiles() {
+    var el = document.getElementById("tryTiles");
+    var opts = tryOptions();
+    if (state.tryThis[0] && opts.indexOf(state.tryThis[0]) === -1) { opts.push(state.tryThis[0]); }
+    el.innerHTML = opts.map(function (o) {
+      return '<button class="tile" data-value="' + o.replace(/"/g, "&quot;") + '">' + o + '</button>';
+    }).join("");
+    renderGroup(el);
+  }
+
+  // ---------- summary for the note
+  function list(a) { return a.join(", "); }
+  function renderSummary() {
+    var L = [];
+    if (state.feelings.length || state.strength.length) {
+      L.push("Check-in: " + (state.feelings.length ? list(state.feelings) : "no feeling picked") +
+        (state.strength.length ? "; strength " + state.strength[0] + "/10" : "") + ".");
+    }
+    var names = { comic: "comic of a school day", picking: "skin picking map", food: "food quest" };
+    if (state.card.length) { L.push("Chose: " + names[state.card[0]] + "."); }
+    var panels = state.comic.map(function (p, i) {
+      var bits = [];
+      if (p.what.trim()) { bits.push("happened: " + p.what.trim()); }
+      if (p.thought.trim()) { bits.push("thought: " + p.thought.trim()); }
+      if (p.feeling.length) { bits.push("feeling: " + p.feeling[0]); }
+      return bits.length ? "panel " + (i + 1) + " (" + bits.join("; ") + ")" : "";
+    }).filter(Boolean);
+    if (panels.length) { L.push("Comic: " + panels.join(" | ") + "."); }
+    if (state.pickWhen.length || state.pickOften.length || state.pickInstead.length) {
+      var s = [];
+      if (state.pickWhen.length) { s.push("most at " + list(state.pickWhen)); }
+      if (state.pickOften.length) { s.push("this week " + state.pickOften[0]); }
+      if (state.pickInstead.length) { s.push("instead " + list(state.pickInstead)); }
+      L.push("Skin picking: " + s.join("; ") + ".");
+    }
+    var food = state.food.filter(function (f) { return f.name.trim() && (f.done || f.before !== "" || f.after !== ""); })
+      .map(function (f) {
+        var b = [f.name.trim()];
+        if (f.done) { b.push("done " + f.done + (f.done === 1 ? " time" : " times")); }
+        if (f.before !== "") { b.push("worry before " + f.before); }
+        if (f.after !== "") { b.push("after " + f.after); }
+        return b.join(", ");
+      });
+    if (food.length) { L.push("Food quest: " + food.join("; ") + "."); }
+    if (state.last.length) { L.push("Last part: " + state.last[0] + "."); }
+    if (state.tell.length) { L.push("Could tell: " + state.tell[0] + "."); }
+    if (state.tryThis.length) { L.push("Try this week: " + state.tryThis[0].toLowerCase() + "."); }
+    document.getElementById("summaryText").value = L.length ? L.join("\n") : "No answers yet.";
+  }
+
+  // ---------- events
+  document.addEventListener("click", function (e) {
+    var go = e.target.closest("[data-go]");
+    if (go) { state.screen = go.dataset.go; save(); renderAll(); window.scrollTo({ top: 0 }); return; }
+
+    var done = e.target.closest("[data-done]");
+    if (done) { state.food[+done.dataset.done].done += 1; save(); renderCounts(); buildTryTiles(); return; }
+
+    var tile = e.target.closest("[data-value]");
+    var group = tile && tile.closest("[data-group]");
+    if (tile && group) {
+      var name = group.dataset.group, max = +group.dataset.max || 1, v = tile.dataset.value;
+      var sel = (getGroup(name) || []).slice(), at = sel.indexOf(v);
+      if (at !== -1) { sel.splice(at, 1); }
+      else if (max === 1) { sel = [v]; }
+      else if (sel.length < max) { sel.push(v); }
+      setGroup(name, sel);
+      save();
+      if (name === "card") { renderAll(); } else { renderGroup(group); buildTryTiles(); }
+    }
+  });
+
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.dataset.comic !== undefined) { state.comic[+t.dataset.comic][t.dataset.key] = t.value; save(); }
+    if (t.dataset.food !== undefined) { state.food[+t.dataset.food][t.dataset.key] = t.value; save(); buildTryTiles(); }
+  });
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.tagName === "SELECT" && t.dataset.food !== undefined) { state.food[+t.dataset.food][t.dataset.key] = t.value; save(); }
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var ta = document.getElementById("summaryText"), status = document.getElementById("copyStatus");
+    function fallback() {
+      ta.focus(); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      status.textContent = ok ? "Copied." : "Selected. Press Ctrl+C to copy.";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(ta.value).then(function () { status.textContent = "Copied."; }, fallback);
+    } else { fallback(); }
+  });
+
+  document.getElementById("clearBtn").addEventListener("click", function () {
+    document.getElementById("clearConfirm").hidden = false;
+  });
+  document.getElementById("clearNo").addEventListener("click", function () {
+    document.getElementById("clearConfirm").hidden = true;
+  });
+  document.getElementById("clearYes").addEventListener("click", function () {
+    state = fresh();
+    try { sessionStorage.removeItem(KEY); } catch (e) {}
+    document.getElementById("clearConfirm").hidden = true;
+    document.getElementById("copyStatus").textContent = "";
+    init();
+    window.scrollTo({ top: 0 });
+  });
+
+  function init() {
+    buildScale(document.querySelector('[data-group="strength"]'), "strength");
+    buildComic();
+    buildLadder();
+    renderAll();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
