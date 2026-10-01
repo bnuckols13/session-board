@@ -4,143 +4,272 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0D1424">
 <title>Session board</title>
 <style>
 :root {
-  --bg: #FAF9F7; --surface: #FFFFFE; --text: #1A1A1A; --muted: #5A5A5A;
-  --border: #E2E0DC; --accent: #4A7C6F; --tint: #EDF5F2; --focus: #2F5A4F;
-  --radius: 14px;
-  --blue-bg: #E2EBF7; --green-bg: #E3F1EA; --red-bg: #F7E3DF;
-}
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #16181A; --surface: #1F2224; --text: #EDEDED; --muted: #A8ACAE;
-    --border: #33373A; --accent: #7FB5A6; --tint: #1E2B28; --focus: #A9D6CA;
-    --blue-bg: #1B2533; --green-bg: #1C2B24; --red-bg: #34201D; }
+  --night-1: #0D1424; --night-2: #19203E;
+  --surface: #18243B; --surface-2: #1F2D49; --raised: #29395C; --well: #0E1628;
+  --text: #F3ECDC; --muted: #B7B1A3; --faint: #8E897C; --border: #34476C;
+  --gold: #E8C470; --gold-hi: #F6DC9A; --gold-glow: rgba(232, 196, 112, .45); --gold-wash: rgba(232, 196, 112, .10);
+  --ink: #161B29; --focus: #FFE6A3; --villain: #AE9FDB;
+  --gem-blue: #26487D; --gem-green: #1D604F; --gem-red: #7C2F35;
+  --radius: 16px;
+  --serif: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='10'%3E%3Cpath d='M0 5 Q10 0 20 5 T40 5' fill='none' stroke='%23E8C470' stroke-width='1.6' stroke-linecap='round' stroke-dasharray='2 4'/%3E%3C/svg%3E");
+  --wave-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='40'%3E%3Cpath d='M6 0 Q0 10 6 20 T6 40' fill='none' stroke='%23E8C470' stroke-width='2' stroke-linecap='round' stroke-dasharray='2 5'/%3E%3C/svg%3E");
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html { font-size: 18px; }
-body { margin: 0; background: var(--bg); color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.45; }
-.wrap { max-width: 920px; margin: 0 auto; padding: 20px 16px 48px; }
-h1 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; letter-spacing: .02em; }
-h2 { font-size: 1.5rem; margin: 28px 0 6px; }
-h3 { font-size: 1.1rem; margin: 22px 0 10px; }
+html { font-size: 18px; background: var(--night-1); }
+body { margin: 0; min-height: 100vh; color: var(--text); line-height: 1.45;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background:
+    radial-gradient(900px 520px at 88% -6%, rgba(232, 196, 112, .14), transparent 62%),
+    radial-gradient(800px 700px at -12% 108%, rgba(96, 128, 214, .12), transparent 60%),
+    linear-gradient(180deg, var(--night-1) 0%, var(--night-2) 100%);
+  background-attachment: fixed; }
+.sky { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.wrap { position: relative; z-index: 1; max-width: 940px; margin: 0 auto; padding: 18px 16px 56px; }
+.top { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; }
+.top svg { width: 30px; height: 30px; flex: none; }
+h1 { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; color: var(--muted); margin: 0; letter-spacing: .05em; }
+h2 { display: table; font-family: var(--serif); font-size: 1.75rem; font-weight: 600; margin: 30px 0 8px; padding-bottom: 12px;
+  background: var(--wave) repeat-x left bottom / 40px 10px; }
+h3 { font-family: var(--serif); font-size: 1.18rem; font-weight: 600; margin: 22px 0 10px; }
+h4 { font-family: var(--serif); font-size: 1.05rem; font-weight: 600; color: var(--gold-hi); margin: 24px 0 8px; }
+h4.sub { font-size: .98rem; color: var(--muted); margin: 14px 0 6px; }
+.panel > h3:first-child, .panel > h4:first-child { margin-top: 4px; }
 p.hint { color: var(--muted); margin: 0 0 12px; }
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: 3px solid var(--focus); outline-offset: 2px; }
 
-/* agenda */
-.agenda { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.agenda button { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
-  padding: 12px 10px; text-align: left; min-height: 64px; }
-.agenda .step { display: block; font-weight: 650; font-size: 1.05rem; }
-.agenda .min { display: block; color: var(--muted); font-size: .85rem; }
-.agenda button[aria-current="step"] { border-color: var(--accent); background: var(--tint); }
-.agenda button[aria-current="step"] .min::after { content: " \00b7  now"; font-weight: 600; color: var(--accent); }
+/* agenda: the session's stops on a dotted path */
+.agenda { position: relative; display: grid; grid-template-columns: repeat(var(--stops, 3), minmax(0, 1fr)); gap: 12px; }
+.agenda::before { content: ""; position: absolute; left: 6%; right: 6%; top: 50%; height: 10px; margin-top: -5px;
+  background: var(--wave) repeat-x center / 40px 10px; opacity: .8; }
+.agenda button { position: relative; background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
+  padding: 12px; text-align: left; min-height: 66px; }
+.agenda .step { display: block; font-family: var(--serif); font-weight: 600; font-size: 1.08rem; line-height: 1.2; }
+.agenda .min { display: block; color: var(--muted); font-size: .85rem; margin-top: 2px; }
+.agenda.many { gap: 8px; }
+.agenda.many button { padding: 9px 9px; min-height: 62px; }
+.agenda.many .step { font-size: .95rem; }
+.agenda.many .min { font-size: .78rem; }
+.agenda button.visited { border-color: rgba(232, 196, 112, .45); padding-right: 22px; }
+.agenda button.visited::after { content: "\2726"; position: absolute; top: 6px; right: 8px; color: var(--gold); font-size: .8rem; }
+.agenda button[aria-current="step"] { border-color: var(--gold); background: var(--raised);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 20px rgba(232, 196, 112, .22); }
+.agenda button[aria-current="step"] .min::after { content: " \00b7  now"; font-weight: 650; color: var(--gold); }
 
 /* tiles */
 .tiles { display: flex; flex-wrap: wrap; gap: 10px; }
-.tile { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
-  padding: 12px 16px; min-height: 52px; min-width: 88px; font-size: 1rem; }
-.tile[aria-pressed="true"] { border-color: var(--accent); background: var(--tint); font-weight: 650; }
-.tile[aria-pressed="true"]::before { content: "\2713  "; color: var(--accent); }
-.tile:disabled { opacity: .45; cursor: default; }
-.scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; max-width: 640px; }
+.tile { background: var(--surface-2); border: 2px solid var(--border); border-radius: 14px;
+  padding: 11px 16px; min-height: 52px; min-width: 88px; font-size: 1rem; text-align: left; }
+.tile:hover:not(:disabled) { border-color: rgba(232, 196, 112, .55); }
+.tile[aria-pressed="true"] { border-color: var(--gold); background-color: var(--raised); font-weight: 650;
+  box-shadow: 0 0 14px rgba(232, 196, 112, .22); }
+.tile[aria-pressed="true"]::before { content: "\2726  "; color: var(--gold); }
+.tile:disabled { opacity: .4; cursor: default; }
+.tiles.small .tile { min-height: 44px; min-width: 0; padding: 8px 13px; font-size: .92rem; }
+.scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; max-width: 660px; }
 .scale .tile { min-width: 0; padding: 10px 0; text-align: center; }
 .scale .tile[aria-pressed="true"]::before { content: ""; }
-.scale-ends { display: flex; justify-content: space-between; max-width: 640px; color: var(--muted); font-size: .85rem; margin-top: 4px; }
+.scale-ends { display: flex; justify-content: space-between; max-width: 660px; color: var(--muted); font-size: .85rem; margin-top: 4px; }
 .note { color: var(--muted); font-size: .9rem; margin-top: 8px; min-height: 1.2em; }
 
-/* cards */
-.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.card { background: var(--surface); border: 2px solid var(--border); border-radius: var(--radius);
-  padding: 16px; text-align: left; min-height: 110px; }
-.card strong { display: block; font-size: 1.1rem; margin-bottom: 4px; }
+/* one thing: three cards */
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.card { position: relative; background: linear-gradient(180deg, #1E2B47, #172238); border: 2px solid var(--border);
+  border-radius: 18px; padding: 18px 16px 16px; text-align: left; min-height: 160px;
+  box-shadow: inset 0 0 0 5px #19253D, inset 0 0 0 6px rgba(232, 196, 112, .22); }
+.card svg { display: block; width: 48px; height: 48px; color: var(--gold); margin-bottom: 10px; }
+.card strong { display: block; font-family: var(--serif); font-size: 1.22rem; font-weight: 600; margin-bottom: 4px; }
 .card span { color: var(--muted); font-size: .9rem; }
-.card[aria-pressed="true"] { border-color: var(--accent); background: var(--tint); }
-.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-top: 18px; }
+.card[aria-pressed="true"] { border-color: var(--gold);
+  box-shadow: inset 0 0 0 5px #1E2B47, inset 0 0 0 6px rgba(232, 196, 112, .5), 0 0 24px rgba(232, 196, 112, .22); }
+.card[aria-pressed="true"]::after { content: "\2726"; position: absolute; top: 12px; right: 16px; color: var(--gold); font-size: 1.15rem; }
+.panel { background: rgba(24, 36, 59, .94); border: 1px solid var(--border); border-radius: 20px; padding: 18px; margin-top: 14px; }
+
+/* questions: nothing on screen but the moon */
+.bigmoon { display: block; width: 110px; height: 110px; margin: 26px 0 8px; }
 
 /* comic */
 .comic { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.frame { border: 2px solid var(--text); border-radius: 6px; padding: 12px; background: var(--surface); }
-.frame .label { font-weight: 700; margin-bottom: 8px; }
+.frame { border: 2px solid var(--text); border-radius: 8px; padding: 12px; background: var(--surface-2); }
+.frame .label { font-family: var(--serif); font-weight: 700; margin-bottom: 8px; }
 label.field { display: block; font-size: .9rem; color: var(--muted); margin: 8px 0 4px; }
-textarea, input[type="text"], select { width: 100%; font: inherit; color: var(--text); background: var(--bg);
-  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+textarea, input[type="text"], select { width: 100%; font: inherit; color: var(--text); background: var(--well);
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+input::placeholder, textarea::placeholder { color: var(--faint); }
 textarea { min-height: 64px; resize: vertical; }
 .bubble { border-radius: 18px; }
 .frame .tiles .tile { min-height: 40px; min-width: 0; padding: 6px 10px; font-size: .9rem; }
 
-/* food quest: exposure tracking + emotional thermometer */
-h4 { font-size: 1rem; margin: 22px 0 8px; }
-h4.sub { font-size: .95rem; margin: 14px 0 6px; color: var(--muted); }
-.story { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.qmap { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.qmap li { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
-.qmap .num { font-weight: 700; color: var(--muted); text-align: center; }
-.qmap .count { font-size: .85rem; color: var(--muted); white-space: nowrap; min-width: 6.5em; text-align: right; }
+/* the ally's lantern: brighter with every glimmer */
+.ally-power .halo { opacity: var(--power, .06); }
+.ally-power .flame { fill: #5E5949; }
+.ally-power.lit .flame { fill: #FFD978; }
+.charms { margin-top: 8px; color: var(--faint); min-height: 2.6em; }
+.charms .row { display: block; font-size: 1.05rem; letter-spacing: .14em; }
+.charms .row span { display: inline-block; }
+.charms .on { color: var(--gold); text-shadow: 0 0 8px var(--gold-glow); }
+.charms .more { color: var(--gold); font-size: .85rem; letter-spacing: 0; margin-left: 4px; }
+.charms .count { display: block; font-size: .82rem; color: var(--muted); }
+
+/* glimmers stop */
+.enchant { display: grid; grid-template-columns: 220px 1fr; gap: 22px; align-items: start;
+  background: radial-gradient(460px 300px at 0% 0%, rgba(232, 196, 112, .13), transparent 70%), rgba(24, 36, 59, .94); }
+.ally-power.big { text-align: center; }
+.ally-power.big svg { display: block; width: 150px; height: 150px; margin: 8px auto 0; overflow: visible; color: var(--gold); }
+.ally-power.big .charms .row { font-size: 1.45rem; }
+.ally-power.big .charms .count { font-size: .9rem; }
+.gadd { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-top: 6px; }
+.glist { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.glist li { display: inline-flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 999px;
+  border: 1px solid rgba(232, 196, 112, .55); background: var(--gold-wash); }
+.glist li::before { content: "\2726"; color: var(--gold); }
+.glist .kind { color: var(--muted); font-size: .82rem; }
+.glist button { width: 36px; height: 36px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); font-size: 1.15rem; line-height: 1; }
+.glist button:hover { background: rgba(255, 255, 255, .08); color: var(--text); }
+
+/* food quest: characters */
+.story { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.char { background: var(--surface-2); border: 1px solid var(--border); border-radius: 18px; padding: 14px 12px 12px; text-align: center; }
+.char svg { display: block; width: 72px; height: 72px; margin: 0 auto 2px; overflow: visible; }
+.char.hero svg, .char.ally svg { color: var(--gold); }
+.char.villain svg { color: var(--villain); }
+.char label.field { font-family: var(--serif); font-size: 1rem; color: var(--text); margin-top: 2px; }
+.char input { text-align: center; }
+.char.ally.lit { border-color: rgba(232, 196, 112, .6); box-shadow: 0 0 24px rgba(232, 196, 112, .14); }
+.tile.charm { border-style: dashed; border-color: rgba(232, 196, 112, .7); }
+.tile.charm::before { content: "\2726  "; color: rgba(232, 196, 112, .75); }
+.tile.charm[aria-pressed="true"] { border-style: solid; }
+
+/* food quest: quest map as a trail of stones */
+.qmap { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.qmap::before { content: ""; position: absolute; left: 15px; width: 12px; top: 22px; bottom: 22px;
+  background: var(--wave-v) repeat-y center top / 12px 40px; opacity: .65; }
+.qmap li { position: relative; display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; }
+.qmap .num { position: relative; z-index: 1; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); border: 2px solid var(--border); font-weight: 700; color: var(--muted); }
+.qmap li.goal .num { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 4px rgba(232, 196, 112, .14); }
+.qmap li.done .num { background: var(--gold); border-color: var(--gold); color: var(--ink); box-shadow: 0 0 14px var(--gold-glow); }
+.qmap .count { font-size: .85rem; color: var(--gold); white-space: nowrap; min-width: 7em; text-align: right; }
+.qmap textarea { display: block; min-height: 0; resize: none; overflow: hidden; line-height: 1.35; }
+
+/* food quest: thermometer as gems */
 .zone { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .zone select { width: auto; min-width: 5em; }
 .therm { display: grid; grid-template-columns: repeat(21, 1fr); gap: 4px; }
-.therm .tile { min-width: 0; min-height: 44px; padding: 8px 0; text-align: center; font-size: .85rem; }
+.therm .tile { min-width: 0; min-height: 46px; padding: 8px 0; text-align: center; font-size: .85rem; font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, .08); border-radius: 10px;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, 0) 60%); }
 .therm .tile[aria-pressed="true"]::before { content: ""; }
-.therm .tile.t-blue, .therm .tile.t-blue[aria-pressed="true"] { background: var(--blue-bg); }
-.therm .tile.t-green, .therm .tile.t-green[aria-pressed="true"] { background: var(--green-bg); }
-.therm .tile.t-red, .therm .tile.t-red[aria-pressed="true"] { background: var(--red-bg); }
-.therm .tile[aria-pressed="true"] { border-color: var(--text); border-width: 3px; font-weight: 800; }
-.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--muted); margin: 6px 0 2px; }
-.key span::before { content: ""; display: inline-block; width: .8em; height: .8em; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--border); }
-.key .k-blue::before { background: var(--blue-bg); }
-.key .k-green::before { background: var(--green-bg); }
-.key .k-red::before { background: var(--red-bg); }
-.track { overflow-x: auto; }
+.therm .tile.t-blue { background-color: var(--gem-blue); }
+.therm .tile.t-green { background-color: var(--gem-green); }
+.therm .tile.t-red { background-color: var(--gem-red); }
+.therm .tile[aria-pressed="true"] { border-color: var(--gold); border-width: 3px; font-weight: 800;
+  box-shadow: 0 0 0 2px var(--gold), 0 0 16px var(--gold-glow); transform: translateY(-2px); }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--muted); margin: 8px 0 2px; }
+.key span::before { content: ""; display: inline-block; width: .9em; height: .9em; border-radius: 3px; margin-right: 6px; vertical-align: -1px;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0)); }
+.key .k-blue::before { background-color: var(--gem-blue); }
+.key .k-green::before { background-color: var(--gem-green); }
+.key .k-red::before { background-color: var(--gem-red); }
+
+/* tracking sheet */
+.track { overflow-x: auto; border-radius: 12px; }
 .track table { border-collapse: collapse; width: 100%; font-size: .88rem; }
-.track th, .track td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
-.track th { color: var(--muted); font-weight: 600; }
+.track th, .track td { padding: 7px 9px; text-align: left; vertical-align: top; }
+.track th { color: var(--gold-hi); font-family: var(--serif); font-weight: 600; background: var(--gold-wash); }
+.track tbody tr:nth-child(even) td { background: rgba(255, 255, 255, .035); }
 
 /* nav + footer */
-.nav { display: flex; gap: 10px; margin-top: 28px; }
-.btn { background: var(--accent); color: #fff; border: 0; border-radius: 12px; padding: 12px 22px; min-height: 50px; font-weight: 650; }
-.btn.quiet { background: transparent; color: var(--text); border: 2px solid var(--border); }
-@media (prefers-color-scheme: dark) { .btn { color: #0f1413; } .btn.quiet { color: var(--text); } }
-details.summary { margin-top: 40px; border-top: 1px solid var(--border); padding-top: 16px; }
+.nav { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+.btn { background: linear-gradient(180deg, #F2D58E, var(--gold)); color: var(--ink); border: 0; border-radius: 14px;
+  padding: 12px 22px; min-height: 50px; font-weight: 700; box-shadow: 0 2px 0 #9C7F3A, 0 0 16px rgba(232, 196, 112, .16); }
+.btn:hover { filter: brightness(1.06); }
+.btn.quiet { background: transparent; color: var(--text); border: 2px solid var(--border); box-shadow: none; }
+details.summary { margin-top: 44px; padding-top: 20px; background: var(--wave) repeat-x left top / 40px 10px; }
 details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600; }
-#summaryText { min-height: 160px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; margin-top: 10px; }
+#summaryText { min-height: 170px; font-family: ui-monospace, Consolas, monospace; font-size: .85rem; margin-top: 10px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
-.status { color: var(--muted); font-size: .9rem; }
+.status { color: var(--muted); font-size: .9rem; min-height: 1.2em; margin: 8px 0 0; }
 [hidden] { display: none !important; }
 
 @media (max-width: 640px) {
   .cards, .comic { grid-template-columns: 1fr; }
-  .agenda { gap: 6px; }
-  .agenda button { padding: 8px 8px; min-height: 56px; }
-  .agenda .step { font-size: .9rem; }
-  .agenda .min { font-size: .75rem; }
+  .card { min-height: 0; display: grid; grid-template-columns: 48px 1fr; gap: 0 14px; align-items: center; }
+  .card svg { grid-row: span 2; margin: 0; }
+  .card > :not(svg) { grid-column: 2; }
   .scale { grid-template-columns: repeat(6, 1fr); }
+  h2 { font-size: 1.45rem; }
 }
 @media (max-width: 760px) {
+  .agenda, .agenda.many { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .agenda::before { display: none; }
+  .agenda button, .agenda.many button { padding: 8px; min-height: 58px; }
+  .agenda .step, .agenda.many .step { font-size: .92rem; }
+  .agenda .min, .agenda.many .min { font-size: .75rem; }
   .therm { grid-template-columns: repeat(7, 1fr); }
   .story { grid-template-columns: 1fr; }
+  .char { display: grid; grid-template-columns: 60px 1fr; gap: 0 12px; text-align: left; align-items: center; }
+  .char svg { grid-row: span 3; margin: 0; width: 60px; height: 60px; }
+  .char > :not(svg) { grid-column: 2; }
+  .char label.field, .char input { text-align: left; }
+  .enchant { grid-template-columns: 1fr; gap: 6px; }
+  .ally-power.big svg { width: 110px; height: 110px; }
+  .gadd { grid-template-columns: 1fr; }
+  .qmap li { grid-template-columns: 42px 1fr; }
+  .qmap .count { grid-column: 2; text-align: left; min-width: 0; }
+  .qmap .count:empty { display: none; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .tile, .card, .agenda button { transition: border-color .12s, background-color .12s; }
+  .tile, .card, .agenda button, .btn { transition: border-color .15s, background-color .15s, box-shadow .2s, transform .15s; }
+  .ally-power .halo { transition: opacity .6s; }
+  .sky .tw { animation: twinkle 7s ease-in-out infinite; }
+  .sky .tw:nth-child(4n) { animation-duration: 9s; animation-delay: -3s; }
+  .sky .tw:nth-child(4n+2) { animation-duration: 6s; animation-delay: -5s; }
+  .charms .new { animation: spark .9s ease-out; }
+  .qmap li.lit .num { animation: lit 1.3s ease-out; }
 }
+@keyframes twinkle { 0%, 100% { opacity: .2; } 50% { opacity: .85; } }
+@keyframes spark { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.6); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes lit { 0% { box-shadow: 0 0 0 0 rgba(232, 196, 112, .9); } 100% { box-shadow: 0 0 0 18px rgba(232, 196, 112, 0), 0 0 14px var(--gold-glow); } }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Session board</h1>
+<svg class="sky" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+  <defs>
+    <radialGradient id="halo"><stop offset="0" stop-color="#FFE7A6" stop-opacity=".95"/><stop offset=".55" stop-color="#FFD978" stop-opacity=".35"/><stop offset="1" stop-color="#FFD978" stop-opacity="0"/></radialGradient>
+    <mask id="moonCut"><rect width="32" height="32" fill="#fff"/><circle cx="21" cy="11" r="9.5" fill="#000"/></mask>
+  </defs>
+  <g id="stars" fill="#FFF6DE"></g>
+  <g fill="#E8C470" opacity=".45">
+    <path transform="translate(70 130)" d="M0-9C1-2 2-1 9 0C2 1 1 2 0 9C-1 2-2 1-9 0C-2-1-1-2 0-9Z"/>
+    <path transform="translate(940 80) scale(.7)" d="M0-9C1-2 2-1 9 0C2 1 1 2 0 9C-1 2-2 1-9 0C-2-1-1-2 0-9Z"/>
+    <path transform="translate(40 640) scale(.6)" d="M0-9C1-2 2-1 9 0C2 1 1 2 0 9C-1 2-2 1-9 0C-2-1-1-2 0-9Z"/>
+    <path transform="translate(960 520) scale(.8)" d="M0-9C1-2 2-1 9 0C2 1 1 2 0 9C-1 2-2 1-9 0C-2-1-1-2 0-9Z"/>
+    <path transform="translate(540 970) scale(.6)" d="M0-9C1-2 2-1 9 0C2 1 1 2 0 9C-1 2-2 1-9 0C-2-1-1-2 0-9Z"/>
+  </g>
+</svg>
 
-  <nav class="agenda" aria-label="Today">
-    <button type="button" data-go="checkin"><span class="step">Check-in</span><span class="min">5 min</span></button>
-    <button type="button" data-go="onething"><span class="step">One thing</span><span class="min">20 min</span></button>
-    <button type="button" data-go="pick"><span class="step">Your pick</span><span class="min">10 min</span></button>
-  </nav>
+<div class="wrap">
+  <header class="top">
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <circle cx="15" cy="17" r="11" fill="#E8C470" mask="url(#moonCut)"/>
+      <circle cx="26" cy="22" r="1" fill="#FFF6DE"/><circle cx="23" cy="4" r=".8" fill="#FFF6DE"/>
+    </svg>
+    <h1>Session board</h1>
+  </header>
+
+  <nav class="agenda" id="agenda" aria-label="Today"></nav>
 
   <!-- CHECK-IN -->
-  <section id="checkin" data-screen>
+  <section data-block="checkin">
     <h2>Check-in</h2>
     <h3>This week was more...</h3>
     <p class="hint">Pick one or two.</p>
@@ -157,58 +286,97 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     <h3>How strong: 0 to 10</h3>
     <div class="tiles scale" data-group="strength" data-max="1"></div>
     <div class="scale-ends"><span>0 not at all</span><span>10 the most</span></div>
+  </section>
 
-    <div class="nav"><button class="btn" type="button" data-go="onething">Next</button></div>
+  <!-- QUESTIONS -->
+  <section data-block="questions" hidden>
+    <h2>Questions</h2>
+    <svg class="bigmoon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <circle cx="15" cy="17" r="11" fill="#E8C470" mask="url(#moonCut)"/>
+      <circle cx="27" cy="23" r=".9" fill="#FFF6DE"/><circle cx="24" cy="5" r=".7" fill="#FFF6DE"/>
+    </svg>
+    <p class="hint">Out loud. Nothing to type.</p>
   </section>
 
   <!-- ONE THING -->
-  <section id="onething" data-screen hidden>
+  <section data-block="onething" hidden>
     <h2>One thing</h2>
     <p class="hint">Pick one.</p>
     <div class="cards" data-group="card" data-max="1">
-      <button class="card" data-value="comic"><strong>Comic</strong><span>A school day in 4 panels</span></button>
-      <button class="card" data-value="picking"><strong>Skin picking map</strong><span>When, how often, and what else my hands could do</span></button>
-      <button class="card" data-value="food"><strong>Food quest</strong><span>One step at a time, with the thermometer</span></button>
+      <button class="card" data-value="comic">
+        <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
+          <rect x="5" y="7" width="38" height="34" rx="3"/><path d="M24 7v34M5 24h38"/>
+          <path d="M10 12h8a2 2 0 0 1 2 2v2.5a2 2 0 0 1-2 2h-4.5L11 20.5v-2h-1a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2z" stroke-width="1.6"/>
+        </svg>
+        <strong>Comic</strong><span>A school day in 4 panels</span>
+      </button>
+      <button class="card" data-value="picking">
+        <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 25V12a2.6 2.6 0 0 1 5.2 0v11"/><path d="M23.2 22V9a2.6 2.6 0 0 1 5.2 0v14"/><path d="M28.4 23V12a2.6 2.6 0 0 1 5.2 0v13"/>
+          <path d="M33.6 25v-8a2.6 2.6 0 0 1 5.2 0v12c0 8-5 13-12 13h-1.5c-4.5 0-7.5-2.2-9.8-5.3l-5.3-7.4a2.6 2.6 0 0 1 4.1-3.2L18 30v-5"/>
+          <path d="M41 3.5l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="currentColor" stroke-width="1"/>
+        </svg>
+        <strong>Skin picking map</strong><span>When, how often, and what else my hands could do</span>
+      </button>
+      <button class="card" data-value="food">
+        <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
+          <path d="M5 11l11-4 16 4 11-4v30l-11 4-16-4-11 4z"/><path d="M16 7v30M32 11v30" stroke-width="1.4" opacity=".6"/>
+          <path d="M10 33c4-6 8 0 12-6s7-8 11-10" stroke-linecap="round" stroke-dasharray="2.5 3.5"/>
+          <path d="M37 9.5l1.5 3.3 3.6.4-2.7 2.4.8 3.5-3.2-1.8-3.2 1.8.8-3.5-2.7-2.4 3.6-.4z" fill="currentColor" stroke-width="1"/>
+        </svg>
+        <strong>Food quest</strong><span>Quest map, thermometer, and glimmers</span>
+      </button>
     </div>
+  </section>
 
-    <div class="panel" data-card="comic" hidden>
-      <h3>A school day in 4 panels</h3>
-      <p class="hint">Draw it on your iPad if you want. Fill in the boxes here.</p>
-      <div class="comic" id="comic"></div>
-    </div>
-
-    <div class="panel" data-card="picking" hidden>
-      <h3>When does it happen most?</h3>
-      <div class="tiles" data-group="pickWhen" data-max="5">
-        <button class="tile" data-value="school">school</button>
-        <button class="tile" data-value="bed">bed</button>
-        <button class="tile" data-value="screens">screens</button>
-        <button class="tile" data-value="homework">homework</button>
-        <button class="tile" data-value="something else">something else</button>
-      </div>
-      <h3>How often this week?</h3>
-      <div class="tiles" data-group="pickOften" data-max="1">
-        <button class="tile" data-value="0">0</button>
-        <button class="tile" data-value="1 to 2">1 to 2</button>
-        <button class="tile" data-value="3 to 5">3 to 5</button>
-        <button class="tile" data-value="most days">most days</button>
-      </div>
-      <h3>What could my hands do instead?</h3>
-      <div class="tiles" data-group="pickInstead" data-max="5">
-        <button class="tile" data-value="fidget">fidget</button>
-        <button class="tile" data-value="putty">putty</button>
-        <button class="tile" data-value="draw">draw</button>
-        <button class="tile" data-value="hold something cold">hold something cold</button>
-        <button class="tile" data-value="other">other</button>
+  <!-- GLIMMERS -->
+  <section data-block="glimmers" hidden>
+    <h2 id="gTitle">Enchant the ally</h2>
+    <div class="panel enchant">
+      <div class="ally-power big"><span data-lantern></span><div class="charms"></div></div>
+      <div>
+        <p class="hint">A glimmer is a small good moment. Each one becomes an ally move on the quest.</p>
+        <h4 class="sub">What kind?</h4>
+        <div class="tiles small" data-group="gKind" data-max="1" id="gKindTiles"></div>
+        <div class="gadd">
+          <div><label class="field" for="gText">What was it (optional)</label><input type="text" id="gText" maxlength="60"></div>
+          <button class="btn" type="button" id="addGlimmer">Add glimmer</button>
+        </div>
+        <p class="status" id="gStatus" aria-live="polite"></p>
+        <ul class="glist" id="glist"></ul>
       </div>
     </div>
+  </section>
 
-    <div class="panel" data-card="food" hidden>
-      <h3>Food quest</h3>
+  <!-- FOOD QUEST -->
+  <section data-block="quest" hidden>
+    <h2>Food quest</h2>
+    <div class="panel">
       <div class="story">
-        <div><label class="field" for="qHero">Hero</label><input type="text" id="qHero" data-quest="hero" placeholder="Hero" maxlength="60"></div>
-        <div><label class="field" for="qVillain">Villain</label><input type="text" id="qVillain" data-quest="villain" placeholder="The worry" maxlength="60"></div>
-        <div><label class="field" for="qAlly">Ally</label><input type="text" id="qAlly" data-quest="ally" placeholder="Ally" maxlength="60"></div>
+        <div class="char hero">
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M32 6l20 7v17c0 14-9 23-20 28-11-5-20-14-20-28V13z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+            <path d="M32 21l2.2 5.9 6.3.3-4.9 4 1.7 6.1L32 33.8l-5.3 3.5 1.7-6.1-4.9-4 6.3-.3z" fill="currentColor"/>
+          </svg>
+          <label class="field" for="qHero">Hero</label>
+          <input type="text" id="qHero" data-quest="hero" placeholder="Hero" maxlength="60">
+          <div class="charms" id="heroSteps"></div>
+        </div>
+        <div class="char villain">
+          <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+            <path d="M18 46h30a10 10 0 0 0 1.5-19.9A14 14 0 0 0 23 22.5 11 11 0 0 0 18 46z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/>
+            <ellipse cx="29" cy="36" rx="2.2" ry="3" fill="currentColor"/><ellipse cx="38" cy="36" rx="2.2" ry="3" fill="currentColor"/>
+            <path d="M25.5 30.5l5.5 2M41.5 30.5l-5.5 2M26 52l-2 5M34 52l-2 5M42 52l-2 5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+          <label class="field" for="qVillain">Villain</label>
+          <input type="text" id="qVillain" data-quest="villain" placeholder="The worry" maxlength="60">
+        </div>
+        <div class="char ally ally-power">
+          <span data-lantern></span>
+          <label class="field" for="qAlly">Ally</label>
+          <input type="text" id="qAlly" data-quest="ally" placeholder="Ally" maxlength="60">
+          <div class="charms"></div>
+        </div>
       </div>
 
       <h4>Quest map</h4>
@@ -230,15 +398,7 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
 
       <h4 id="qSupportsLabel">Ally moves I can use</h4>
       <p class="hint">Pick up to 3.</p>
-      <div class="tiles" data-group="qSupports" data-max="3">
-        <button class="tile" data-value="cold water">cold water</button>
-        <button class="tile" data-value="something crunchy">something crunchy</button>
-        <button class="tile" data-value="putty or fidget">putty or fidget</button>
-        <button class="tile" data-value="slow breaths">slow breaths</button>
-        <button class="tile" data-value="music">music</button>
-        <button class="tile" data-value="hold something cold">hold something cold</button>
-        <button class="tile" data-value="something else">something else</button>
-      </div>
+      <div class="tiles" data-group="qSupports" data-max="3" id="qSupportTiles"></div>
       <div class="note" data-note="qSupports"></div>
 
       <h4 id="qTemptedLabel">Villain tricks I might want to use</h4>
@@ -281,15 +441,78 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
       <h4>Tracking sheet</h4>
       <div class="track" id="track"></div>
     </div>
+  </section>
 
-    <div class="nav">
-      <button class="btn quiet" type="button" data-go="checkin">Back</button>
-      <button class="btn" type="button" data-go="pick">Next</button>
+  <!-- COMIC -->
+  <section data-block="comic" hidden>
+    <h2>Comic</h2>
+    <div class="panel">
+      <h3>A school day in 4 panels</h3>
+      <p class="hint">Draw it on your iPad if you want. Fill in the boxes here.</p>
+      <div class="comic" id="comic"></div>
+    </div>
+  </section>
+
+  <!-- SKIN PICKING -->
+  <section data-block="hands" hidden>
+    <h2>Skin picking</h2>
+    <div class="panel">
+      <h3>When does it happen most?</h3>
+      <div class="tiles" data-group="pickWhen" data-max="5">
+        <button class="tile" data-value="school">school</button>
+        <button class="tile" data-value="bed">bed</button>
+        <button class="tile" data-value="screens">screens</button>
+        <button class="tile" data-value="homework">homework</button>
+        <button class="tile" data-value="something else">something else</button>
+      </div>
+      <h3>How often this week?</h3>
+      <div class="tiles" data-group="pickOften" data-max="1">
+        <button class="tile" data-value="0">0</button>
+        <button class="tile" data-value="1 to 2">1 to 2</button>
+        <button class="tile" data-value="3 to 5">3 to 5</button>
+        <button class="tile" data-value="most days">most days</button>
+      </div>
+      <h3>What could my hands do instead?</h3>
+      <div class="tiles" data-group="pickInstead" data-max="5">
+        <button class="tile" data-value="fidget">fidget</button>
+        <button class="tile" data-value="putty">putty</button>
+        <button class="tile" data-value="draw">draw</button>
+        <button class="tile" data-value="hold something cold">hold something cold</button>
+        <button class="tile" data-value="other">other</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FREE TIME -->
+  <section data-block="free" hidden>
+    <h2>Free time</h2>
+    <div class="panel">
+      <h3>Bored with nothing to do: how often this week?</h3>
+      <div class="tiles" data-group="freeOften" data-max="1">
+        <button class="tile" data-value="0">0</button>
+        <button class="tile" data-value="1 to 2">1 to 2</button>
+        <button class="tile" data-value="3 to 5">3 to 5</button>
+        <button class="tile" data-value="most days">most days</button>
+      </div>
+      <h3>Next time I could</h3>
+      <p class="hint">Pick up to 3.</p>
+      <div class="tiles" data-group="freeNext" data-max="3">
+        <button class="tile" data-value="draw">draw</button>
+        <button class="tile" data-value="design something">design something</button>
+        <button class="tile" data-value="listen to music">listen to music</button>
+        <button class="tile" data-value="go outside">go outside</button>
+        <button class="tile" data-value="read">read</button>
+        <button class="tile" data-value="build something">build something</button>
+        <button class="tile" data-value="text a friend">text a friend</button>
+        <button class="tile" data-value="look for a glimmer">look for a glimmer</button>
+        <button class="tile" data-value="something else">something else</button>
+      </div>
+      <div class="note" data-note="freeNext"></div>
     </div>
   </section>
 
   <!-- YOUR PICK -->
-  <section id="pick" data-screen hidden>
+  <section data-block="pick" hidden>
     <h2>Your pick</h2>
     <h3>The last part</h3>
     <div class="tiles" data-group="last" data-max="1">
@@ -311,9 +534,9 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     <h3>Something to try this week</h3>
     <p class="hint">Pick one.</p>
     <div class="tiles" data-group="tryThis" data-max="1" id="tryTiles"></div>
-
-    <div class="nav"><button class="btn quiet" type="button" data-go="onething">Back</button></div>
   </section>
+
+  <div class="nav" id="flowNav"></div>
 
   <details class="summary" id="summaryBox">
     <summary>Summary for notes</summary>
@@ -341,39 +564,132 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   var FEELINGS = ["sad", "worried", "tired", "annoyed", "okay", "something else"];
   var STEPS = 8;
   var TRIAL = ["qLength", "qSupports", "qTempted", "qBefore", "qPeak", "qEnd", "qHelped"];
+  var SUPPORTS = ["cold water", "something crunchy", "putty or fidget", "slow breaths", "music", "hold something cold", "something else"];
+  var GLIMMER_KINDS = [
+    { id: "sound", label: "a sound" }, { id: "sight", label: "something I saw" }, { id: "touch", label: "a texture" },
+    { id: "animal", label: "an animal" }, { id: "person", label: "a person" }, { id: "place", label: "a place" },
+    { id: "movement", label: "movement" }, { id: "interest", label: "a hobby or interest" },
+    { id: "warmth", label: "warmth" }, { id: "quiet", label: "quiet" }
+  ];
+  var CHARM_SLOTS = 7;
+  // Every stop a session can include. A setup link picks the stops, their order, and their minutes.
+  var STOPS = {
+    checkin: { label: "Check-in", min: 5 },
+    questions: { label: "Questions", min: 3 },
+    onething: { label: "One thing", min: 20 },
+    glimmers: { label: "Glimmers", min: 5 },
+    quest: { label: "Food quest", min: 20 },
+    comic: { label: "Comic", min: 10 },
+    hands: { label: "Skin picking", min: 3 },
+    free: { label: "Free time", min: 3 },
+    pick: { label: "Your pick", min: 10 }
+  };
+  var DEFAULT_FLOW = [["checkin", 5], ["onething", 20], ["pick", 10]];
+  var CARD_BLOCKS = { comic: ["comic"], picking: ["hands"], food: ["glimmers", "quest"] };
+  var LANTERN = '<svg viewBox="0 0 64 80" aria-hidden="true" focusable="false">' +
+    '<circle class="halo" cx="32" cy="42" r="34" fill="url(#halo)"/>' +
+    '<path d="M25 11a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<path d="M19 19h26l-4-7H23z" fill="currentColor"/>' +
+    '<rect x="19" y="19" width="26" height="40" rx="7" fill="rgba(255, 231, 166, .07)" stroke="currentColor" stroke-width="2.6"/>' +
+    '<path class="flame" d="M32 29c4.5 5 6.5 9 6.5 13a6.5 6.5 0 0 1-13 0c0-4 2-8 6.5-13z"/>' +
+    '<path d="M17 59h30l-3.5 7h-23z" fill="currentColor"/></svg>';
 
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
   function signed(v) { var n = Number(v); return n > 0 ? "+" + n : String(n); }
+  function times(n) { return n + (n === 1 ? " time" : " times"); }
+  function plural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+  function lowerFirst(s) { return s.charAt(0).toLowerCase() + s.slice(1); }
+  function upperFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
   function fresh() {
     return {
-      screen: "checkin",
+      flow: DEFAULT_FLOW.map(function (x) { return { id: x[0], min: x[1] }; }),
+      screen: "checkin", visited: {},
       feelings: [], strength: [],
       card: [],
       comic: [0, 1, 2, 3].map(function () { return { what: "", thought: "", feeling: [] }; }),
       pickWhen: [], pickOften: [], pickInstead: [],
+      freeOften: [], freeNext: [],
       quest: {
         hero: "", villain: "", ally: "", zoneLow: -3, zoneHigh: 3,
         steps: Array.apply(null, Array(STEPS)).map(function () { return { name: "", done: 0 }; }),
-        log: []
+        log: [], glimmers: []
       },
+      gKind: [],
       qStep: [], qLength: [], qSupports: [], qTempted: [], qBefore: [], qPeak: [], qEnd: [], qHelped: [],
       last: [], tell: [], tryThis: []
     };
   }
 
+  // State saved by an earlier version of the page may lack newer fields.
+  function normalize(s) {
+    var f = fresh();
+    s.quest = Object.assign(f.quest, s.quest || {});
+    if (!Array.isArray(s.quest.steps) || s.quest.steps.length !== STEPS) { s.quest.steps = f.quest.steps; }
+    if (!Array.isArray(s.quest.log)) { s.quest.log = []; }
+    if (!Array.isArray(s.quest.glimmers)) { s.quest.glimmers = []; }
+    if (!Array.isArray(s.flow) || !s.flow.length || !s.flow.every(function (x) { return x && STOPS[x.id]; })) { s.flow = f.flow; }
+    if (!s.visited || typeof s.visited !== "object") { s.visited = {}; }
+    return s;
+  }
+  function fixScreen() {
+    if (!state.flow.some(function (x) { return x.id === state.screen; })) { state.screen = state.flow[0].id; }
+  }
+
   var state = fresh();
   try {
     var saved = sessionStorage.getItem(KEY);
-    if (saved) { state = Object.assign(fresh(), JSON.parse(saved)); }
+    if (saved) { state = normalize(Object.assign(fresh(), JSON.parse(saved))); }
   } catch (e) { /* storage blocked: the page still works, nothing persists */ }
 
   function save() {
     try { sessionStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
     renderSummary();
+  }
+  function inFlow(id) { return state.flow.some(function (x) { return x.id === id; }); }
+
+  // ---------- night sky: a fixed seed, so the stars sit in the same places every load
+  function buildSky() {
+    var g = document.getElementById("stars"), seed = 20261001, html = "";
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    for (var i = 0; i < 70; i++) {
+      html += '<circle cx="' + (rnd() * 1000).toFixed(1) + '" cy="' + (rnd() * 1000).toFixed(1) +
+        '" r="' + (0.4 + rnd() * 0.7).toFixed(2) + '" opacity="' + (0.25 + rnd() * 0.55).toFixed(2) + '"' +
+        (i % 6 === 0 ? ' class="tw"' : "") + '/>';
+    }
+    g.innerHTML = html;
+  }
+
+  function buildLanterns() {
+    document.querySelectorAll("[data-lantern]").forEach(function (slot) { slot.outerHTML = LANTERN; });
+  }
+
+  // ---------- agenda and stop-to-stop navigation
+  function buildAgenda() {
+    var el = document.getElementById("agenda");
+    el.style.setProperty("--stops", state.flow.length);
+    el.classList.toggle("many", state.flow.length > 4);
+    el.innerHTML = state.flow.map(function (s) {
+      return '<button type="button" data-go="' + s.id + '"><span class="step">' + STOPS[s.id].label +
+        '</span><span class="min">' + s.min + ' min</span></button>';
+    }).join("");
+  }
+
+  function blocksFor(id) {
+    if (id !== "onething") { return [id]; }
+    return ["onething"].concat(CARD_BLOCKS[state.card[0]] || []);
+  }
+
+  function renderNav() {
+    var i = 0;
+    state.flow.forEach(function (s, k) { if (s.id === state.screen) { i = k; } });
+    var prev = state.flow[i - 1], next = state.flow[i + 1], html = "";
+    if (prev) { html += '<button class="btn quiet" type="button" data-go="' + prev.id + '">Back</button>'; }
+    if (next) { html += '<button class="btn" type="button" data-go="' + next.id + '">Next: ' + STOPS[next.id].label + '</button>'; }
+    document.getElementById("flowNav").innerHTML = html;
   }
 
   // ---------- builders
@@ -410,8 +726,6 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   }
 
   // ---------- food quest: quest map, Personal Emotional Thermometer, Exposure Tracking
-  function times(n) { return n + (n === 1 ? " time" : " times"); }
-
   function buildQuest() {
     var q = state.quest;
     ["hero", "villain", "ally"].forEach(function (k) {
@@ -421,12 +735,13 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     map.innerHTML = "";
     q.steps.forEach(function (s, i) {
       var li = document.createElement("li");
-      li.innerHTML = '<span class="num">' + (i + 1) + '</span>' +
-        '<input type="text" maxlength="120" data-step="' + i + '" aria-label="Step ' + (i + 1) + '" placeholder="' +
-        (i === STEPS - 1 ? "Goal" : "Step " + (i + 1)) + '">' +
+      if (i === STEPS - 1) { li.className = "goal"; }
+      li.innerHTML = '<span class="num" aria-hidden="true">' + (i + 1) + '</span>' +
+        '<textarea rows="1" maxlength="120" data-step="' + i + '" aria-label="Step ' + (i + 1) + '" placeholder="' +
+        (i === STEPS - 1 ? "Goal" : "Step " + (i + 1)) + '"></textarea>' +
         '<span class="count" id="qcount' + i + '"></span>';
       map.appendChild(li);
-      li.querySelector("input").value = s.name;
+      li.querySelector("textarea").value = s.name;
     });
     ["zoneLow", "zoneHigh"].forEach(function (k) {
       var sel = document.getElementById(k), opts = "";
@@ -438,6 +753,7 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     buildStepTiles();
     renderQuestCounts();
     renderQuestLabels();
+    renderGlimmers(false);
     renderTrack();
   }
 
@@ -464,18 +780,37 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   }
 
   function renderQuestCounts() {
+    var named = 0, done = 0, row = "";
     state.quest.steps.forEach(function (s, i) {
       var c = document.getElementById("qcount" + i);
-      if (c) { c.textContent = s.done ? "Done " + times(s.done) : ""; }
+      if (c) {
+        c.textContent = s.done ? "✦ Done " + times(s.done) : "";
+        c.parentNode.classList.toggle("done", s.done > 0);
+      }
+      if (s.name.trim()) {
+        named += 1;
+        if (s.done) { done += 1; }
+        row += s.done ? '<span class="on">◆</span>' : '<span>◇</span>';
+      }
     });
+    document.getElementById("heroSteps").innerHTML = named
+      ? '<span class="row" aria-hidden="true">' + row + '</span><span class="count">' + done + " of " + plural(named, "step") + " done</span>"
+      : "";
   }
 
+  // Step names wrap instead of scrolling sideways, so a long step stays readable on the map.
+  function fitStep(el) {
+    if (!el.offsetParent) { el.style.height = ""; return; }
+    el.style.height = "auto";
+    el.style.height = (el.scrollHeight + 2) + "px";
+  }
+  function fitSteps() { document.querySelectorAll("#qmap textarea").forEach(fitStep); }
+
   function renderQuestLabels() {
-    var q = state.quest;
-    document.getElementById("qSupportsLabel").textContent =
-      "Ally moves I can use" + (q.ally.trim() ? " (" + q.ally.trim() + ")" : "");
-    document.getElementById("qTemptedLabel").textContent =
-      "Villain tricks I might want to use" + (q.villain.trim() ? " (" + q.villain.trim() + ")" : "");
+    var q = state.quest, ally = q.ally.trim(), villain = q.villain.trim();
+    document.getElementById("gTitle").textContent = ally ? "Enchant " + ally : "Enchant the ally";
+    document.getElementById("qSupportsLabel").textContent = "Ally moves I can use" + (ally ? " (" + ally + ")" : "");
+    document.getElementById("qTemptedLabel").textContent = "Villain tricks I might want to use" + (villain ? " (" + villain + ")" : "");
   }
 
   function renderTrack() {
@@ -509,10 +844,87 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     renderQuestCounts();
     renderTrack();
     buildTryTiles();
+    var li = document.getElementById("qcount" + i).parentNode;
+    li.classList.remove("lit"); void li.offsetWidth; li.classList.add("lit");
+    setTimeout(function () { li.classList.remove("lit"); }, 1400);
     status.textContent = "Logged. Step " + (i + 1) + " done " + times(step.done) + ".";
   }
 
-  // A setup link carries the quest in the URL fragment, which browsers never send to the server.
+  // ---------- glimmers: each one adds a charm to the ally and becomes an ally move
+  function kindLabel(id) {
+    var k = GLIMMER_KINDS.filter(function (g) { return g.id === id; })[0];
+    return k ? k.label : "";
+  }
+  function glimmerName(g) { return g.text.trim() || kindLabel(g.kind) || "glimmer"; }
+  function glimmerFull(g) {
+    var k = kindLabel(g.kind), t = g.text.trim();
+    return t ? (k ? k + ": " + t : t) : (k || "glimmer");
+  }
+
+  function buildKindTiles() {
+    var el = document.getElementById("gKindTiles");
+    el.innerHTML = GLIMMER_KINDS.map(function (k) {
+      return '<button type="button" class="tile" data-value="' + k.id + '">' + k.label + '</button>';
+    }).join("");
+    renderGroup(el);
+  }
+
+  function renderGlimmers(isNew) {
+    var q = state.quest;
+    document.getElementById("glist").innerHTML = q.glimmers.map(function (g, i) {
+      var k = kindLabel(g.kind), t = g.text.trim();
+      return '<li><span>' + esc(t || k || "glimmer") + '</span>' + (t && k ? '<span class="kind">' + esc(k) + '</span>' : "") +
+        '<button type="button" data-remove="' + i + '" aria-label="Remove ' + esc(glimmerName(g)) + '">×</button></li>';
+    }).join("");
+    renderAlly(isNew);
+    buildSupportTiles();
+  }
+
+  function renderAlly(isNew) {
+    var n = state.quest.glimmers.length, shown = Math.min(n, CHARM_SLOTS), html = "";
+    for (var i = 0; i < CHARM_SLOTS; i++) {
+      var on = i < shown;
+      html += '<span class="' + (on ? "on" : "off") + (isNew && on && i === shown - 1 ? " new" : "") + '">' +
+        (on ? "✦" : "✧") + '</span>';
+    }
+    if (n > CHARM_SLOTS) { html += '<span class="more">+' + (n - CHARM_SLOTS) + '</span>'; }
+    document.querySelectorAll(".ally-power").forEach(function (box) {
+      box.style.setProperty("--power", (0.06 + shown * 0.13).toFixed(2));
+      box.classList.toggle("lit", n > 0);
+      box.querySelector(".charms").innerHTML = '<span class="row" aria-hidden="true">' + html + '</span>' +
+        '<span class="count">' + plural(n, "glimmer") + '</span>';
+    });
+  }
+
+  function buildSupportTiles() {
+    var el = document.getElementById("qSupportTiles"), seen = {}, html = "";
+    state.quest.glimmers.forEach(function (g) {
+      var name = glimmerName(g), v = "glimmer: " + name;
+      if (seen[v]) { return; }
+      seen[v] = true;
+      html += '<button type="button" class="tile charm" data-value="' + esc(v) + '">' + esc(name) + '</button>';
+    });
+    SUPPORTS.forEach(function (s) { html += '<button type="button" class="tile" data-value="' + s + '">' + s + '</button>'; });
+    el.innerHTML = html;
+    state.qSupports = state.qSupports.filter(function (v) { return v.indexOf("glimmer: ") !== 0 || seen[v]; });
+    renderGroup(el);
+  }
+
+  function addGlimmer() {
+    var input = document.getElementById("gText"), status = document.getElementById("gStatus");
+    var text = input.value.trim().slice(0, 60), kind = state.gKind[0] || "";
+    if (!text && !kind) { status.textContent = "Pick a kind or type what it was."; return; }
+    state.quest.glimmers.push({ kind: kind, text: text });
+    state.gKind = [];
+    input.value = "";
+    renderGroup(document.getElementById("gKindTiles"));
+    renderGlimmers(true);
+    save();
+    buildTryTiles();
+    status.textContent = "Glimmer added. " + plural(state.quest.glimmers.length, "glimmer") + ".";
+  }
+
+  // A setup link carries the session in the URL fragment, which browsers never send to the server.
   function importFromHash() {
     var h = location.hash;
     if (h.indexOf("#q=") !== 0) { return; }
@@ -527,6 +939,29 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
       if (typeof d.a === "string") { q.ally = d.a.slice(0, 60); }
       if (Array.isArray(d.s)) {
         d.s.slice(0, STEPS).forEach(function (n, i) { if (typeof n === "string") { q.steps[i].name = n.slice(0, 120); } });
+      }
+      if (Array.isArray(d.c)) {
+        d.c.slice(0, STEPS).forEach(function (n, i) { if (typeof n === "number" && n >= 0) { q.steps[i].done = Math.floor(n); } });
+      }
+      if (Array.isArray(d.g)) {
+        q.glimmers = d.g.slice(0, 40).map(function (g) {
+          if (typeof g === "string") { return { kind: "", text: g.slice(0, 60) }; }
+          var kind = g && typeof g.k === "string" && kindLabel(g.k) ? g.k : "";
+          return { kind: kind, text: g && typeof g.t === "string" ? g.t.slice(0, 60) : "" };
+        }).filter(function (g) { return g.kind || g.text.trim(); });
+      }
+      if (Array.isArray(d.z) && d.z.length === 2) {
+        var lo = Math.round(+d.z[0]), hi = Math.round(+d.z[1]);
+        if (lo >= -10 && hi <= 10 && lo <= hi) { q.zoneLow = lo; q.zoneHigh = hi; }
+      }
+      if (Array.isArray(d.f)) {
+        var seen = {}, flow = d.f.map(function (x) {
+          var id = Array.isArray(x) ? x[0] : x, min = Array.isArray(x) ? Math.round(+x[1]) : NaN;
+          if (typeof id !== "string" || !STOPS.hasOwnProperty(id) || seen[id]) { return null; }
+          seen[id] = true;
+          return { id: id, min: min >= 1 && min <= 90 ? min : STOPS[id].min };
+        }).filter(Boolean).slice(0, 9);
+        if (flow.length) { state.flow = flow; state.screen = flow[0].id; state.visited = {}; }
       }
       if (!state.card.length) { state.card = ["food"]; }
       save();
@@ -558,32 +993,45 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   }
 
   function renderAll() {
+    fixScreen();
     document.querySelectorAll("[data-group]").forEach(renderGroup);
-    var card = state.card[0] || "";
-    document.querySelectorAll("[data-card]").forEach(function (p) { p.hidden = p.dataset.card !== card; });
-    document.querySelectorAll("[data-screen]").forEach(function (s) { s.hidden = s.id !== state.screen; });
+    var blocks = blocksFor(state.screen);
+    document.querySelectorAll("[data-block]").forEach(function (s) { s.hidden = blocks.indexOf(s.dataset.block) === -1; });
     document.querySelectorAll(".agenda [data-go]").forEach(function (b) {
-      if (b.dataset.go === state.screen) { b.setAttribute("aria-current", "step"); } else { b.removeAttribute("aria-current"); }
+      var id = b.dataset.go;
+      if (id === state.screen) { b.setAttribute("aria-current", "step"); } else { b.removeAttribute("aria-current"); }
+      b.classList.toggle("visited", !!state.visited[id] && id !== state.screen);
     });
+    renderNav();
+    fitSteps();
     buildTryTiles();
     renderSummary();
   }
 
-  // ---------- "something to try" options follow what was chosen
+  // ---------- "something to try" options follow what was done in the session
   function tryOptions() {
-    var opts = [];
-    var who = state.tell[0];
-    opts.push(who ? "Tell " + who + " one feeling" : "Tell someone one feeling");
+    var q = state.quest, card = state.card[0];
+    var next = q.steps.filter(function (s) { return s.name.trim() && !s.done; })[0];
+    var last = q.log[q.log.length - 1];
+    var questOn = inFlow("quest") || inFlow("glimmers") || (inFlow("onething") && card === "food");
+    var quest = !questOn ? "" : last ? "Do quest step " + (last.step + 1) + " again at home"
+      : (next ? "Try quest step: " + lowerFirst(next.name.trim()) : "");
+    var glimmers = questOn || q.glimmers.length ? "Notice 3 glimmers for " + (q.ally.trim() || "the ally") : "";
     var instead = state.pickInstead.filter(function (v) { return v !== "other"; })[0];
-    if (state.pickWhen.length || state.pickInstead.length) {
-      opts.push(instead ? "Use " + instead + " when my hands want to pick" : "Notice when my hands want to pick");
-    }
-    var next = state.quest.steps.filter(function (s) { return s.name.trim() && !s.done; })[0];
-    var last = state.quest.log[state.quest.log.length - 1];
-    if (last) { opts.push("Do quest step " + (last.step + 1) + " again at home"); }
-    else if (next) { opts.push("Try quest step: " + next.name.trim().toLowerCase()); }
-    if (opts.length < 3) { opts.push("Draw one panel on a hard day"); }
-    if (opts.length < 3) { opts.push("Rate my worry once a day"); }
+    var picking = (state.pickWhen.length || state.pickInstead.length)
+      ? (instead ? "Use " + instead + " when my hands want to pick" : "Notice when my hands want to pick") : "";
+    var freeNext = state.freeNext.filter(function (v) { return v !== "something else"; })[0];
+    var free = freeNext ? upperFirst(freeNext) + " when I'm bored" : "";
+    var who = state.tell[0];
+    var tell = who ? "Tell " + who + " one feeling" : "Tell someone one feeling";
+    var opts = !inFlow("onething") ? [quest, glimmers, free, picking, tell]
+      : card === "picking" ? [picking, tell, glimmers]
+      : card === "comic" ? [tell, glimmers, picking]
+      : [quest, glimmers, tell, picking];
+    opts = opts.filter(Boolean);
+    [tell, "Draw one panel on a hard day", "Rate my worry once a day"].forEach(function (o) {
+      if (opts.length < 3 && opts.indexOf(o) === -1) { opts.push(o); }
+    });
     return opts.slice(0, 3);
   }
 
@@ -592,7 +1040,7 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     var opts = tryOptions();
     if (state.tryThis[0] && opts.indexOf(state.tryThis[0]) === -1) { opts.push(state.tryThis[0]); }
     el.innerHTML = opts.map(function (o) {
-      return '<button class="tile" data-value="' + o.replace(/"/g, "&quot;") + '">' + o + '</button>';
+      return '<button class="tile" data-value="' + esc(o) + '">' + esc(o) + '</button>';
     }).join("");
     renderGroup(el);
   }
@@ -606,7 +1054,7 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
         (state.strength.length ? "; strength " + state.strength[0] + "/10" : "") + ".");
     }
     var names = { comic: "comic of a school day", picking: "skin picking map", food: "food quest" };
-    if (state.card.length) { L.push("Chose: " + names[state.card[0]] + "."); }
+    if (inFlow("onething") && state.card.length) { L.push("Chose: " + names[state.card[0]] + "."); }
     var panels = state.comic.map(function (p, i) {
       var bits = [];
       if (p.what.trim()) { bits.push("happened: " + p.what.trim()); }
@@ -615,14 +1063,10 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
       return bits.length ? "panel " + (i + 1) + " (" + bits.join("; ") + ")" : "";
     }).filter(Boolean);
     if (panels.length) { L.push("Comic: " + panels.join(" | ") + "."); }
-    if (state.pickWhen.length || state.pickOften.length || state.pickInstead.length) {
-      var s = [];
-      if (state.pickWhen.length) { s.push("most at " + list(state.pickWhen)); }
-      if (state.pickOften.length) { s.push("this week " + state.pickOften[0]); }
-      if (state.pickInstead.length) { s.push("instead " + list(state.pickInstead)); }
-      L.push("Skin picking: " + s.join("; ") + ".");
-    }
     var q = state.quest;
+    if (q.glimmers.length) {
+      L.push("Glimmers noticed (" + q.glimmers.length + "), added as ally moves: " + q.glimmers.map(glimmerFull).join("; ") + ".");
+    }
     var story = [];
     if (q.hero.trim()) { story.push("hero " + q.hero.trim()); }
     if (q.villain.trim()) { story.push("villain " + q.villain.trim()); }
@@ -649,16 +1093,34 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
         L.push("- " + b.join("; ") + ".");
       });
     }
+    if (state.pickWhen.length || state.pickOften.length || state.pickInstead.length) {
+      var s = [];
+      if (state.pickWhen.length) { s.push("most at " + list(state.pickWhen)); }
+      if (state.pickOften.length) { s.push("this week " + state.pickOften[0]); }
+      if (state.pickInstead.length) { s.push("instead " + list(state.pickInstead)); }
+      L.push("Skin picking: " + s.join("; ") + ".");
+    }
+    if (state.freeOften.length || state.freeNext.length) {
+      var f = [];
+      if (state.freeOften.length) { f.push("bored with nothing to do this week " + state.freeOften[0]); }
+      if (state.freeNext.length) { f.push("next time could " + list(state.freeNext)); }
+      L.push("Free time: " + f.join("; ") + ".");
+    }
     if (state.last.length) { L.push("Last part: " + state.last[0] + "."); }
     if (state.tell.length) { L.push("Could tell: " + state.tell[0] + "."); }
-    if (state.tryThis.length) { L.push("Try this week: " + state.tryThis[0].toLowerCase() + "."); }
+    if (state.tryThis.length) { L.push("Try this week: " + lowerFirst(state.tryThis[0]) + "."); }
     document.getElementById("summaryText").value = L.length ? L.join("\n") : "No answers yet.";
   }
 
   // ---------- events
   document.addEventListener("click", function (e) {
     var go = e.target.closest("[data-go]");
-    if (go) { state.screen = go.dataset.go; save(); renderAll(); window.scrollTo({ top: 0 }); return; }
+    if (go) {
+      if (go.dataset.go !== state.screen) { state.visited[state.screen] = true; }
+      state.screen = go.dataset.go;
+      save(); renderAll(); window.scrollTo({ top: 0 });
+      return;
+    }
 
     var tile = e.target.closest("[data-value]");
     var group = tile && tile.closest("[data-group]");
@@ -677,9 +1139,20 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   document.addEventListener("input", function (e) {
     var t = e.target;
     if (t.dataset.comic !== undefined) { state.comic[+t.dataset.comic][t.dataset.key] = t.value; save(); }
-    if (t.dataset.quest !== undefined) { state.quest[t.dataset.quest] = t.value; save(); renderQuestLabels(); }
-    if (t.dataset.step !== undefined) { state.quest.steps[+t.dataset.step].name = t.value; save(); buildStepTiles(); buildTryTiles(); }
+    if (t.dataset.quest !== undefined) { state.quest[t.dataset.quest] = t.value; save(); renderQuestLabels(); buildTryTiles(); }
+    if (t.dataset.step !== undefined) {
+      if (/\n/.test(t.value)) { t.value = t.value.replace(/\s*\n+\s*/g, " "); }
+      state.quest.steps[+t.dataset.step].name = t.value;
+      save(); fitStep(t); buildStepTiles(); renderQuestCounts(); buildTryTiles();
+    }
   });
+  document.getElementById("qmap").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || e.target.dataset.step === undefined) { return; }
+    e.preventDefault();
+    var next = document.querySelector('#qmap [data-step="' + (+e.target.dataset.step + 1) + '"]');
+    if (next) { next.focus(); }
+  });
+  window.addEventListener("resize", fitSteps);
   document.addEventListener("change", function (e) {
     var t = e.target;
     if (t.dataset.zone !== undefined) {
@@ -696,9 +1169,23 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   });
 
   document.getElementById("logTry").addEventListener("click", logTry);
+  document.getElementById("addGlimmer").addEventListener("click", addGlimmer);
+  document.getElementById("gText").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); addGlimmer(); }
+  });
+  document.getElementById("glist").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-remove]");
+    if (!b) { return; }
+    state.quest.glimmers.splice(+b.dataset.remove, 1);
+    renderGlimmers(false);
+    save();
+    buildTryTiles();
+    document.getElementById("gStatus").textContent = "Glimmer removed. " + plural(state.quest.glimmers.length, "glimmer") + ".";
+  });
   window.addEventListener("hashchange", function () {
     if (location.hash.indexOf("#q=") !== 0) { return; }
     importFromHash();
+    buildAgenda();
     buildQuest();
     renderAll();
   });
@@ -723,21 +1210,29 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     document.getElementById("clearConfirm").hidden = true;
   });
   document.getElementById("clearYes").addEventListener("click", function () {
+    var flow = state.flow;
     state = fresh();
+    state.flow = flow;
+    state.screen = flow[0].id;
     try { sessionStorage.removeItem(KEY); } catch (e) {}
     document.getElementById("clearConfirm").hidden = true;
     document.getElementById("copyStatus").textContent = "";
+    document.getElementById("gStatus").textContent = "";
     init();
     window.scrollTo({ top: 0 });
   });
 
   function init() {
     importFromHash();
+    buildAgenda();
     buildScale(document.querySelector('[data-group="strength"]'), "strength");
     buildComic();
+    buildKindTiles();
     buildQuest();
     renderAll();
   }
+  buildSky();
+  buildLanterns();
   init();
 })();
 </script>
