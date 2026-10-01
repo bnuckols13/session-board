@@ -10,10 +10,12 @@
   --bg: #FAF9F7; --surface: #FFFFFE; --text: #1A1A1A; --muted: #5A5A5A;
   --border: #E2E0DC; --accent: #4A7C6F; --tint: #EDF5F2; --focus: #2F5A4F;
   --radius: 14px;
+  --blue-bg: #E2EBF7; --green-bg: #E3F1EA; --red-bg: #F7E3DF;
 }
 @media (prefers-color-scheme: dark) {
   :root { --bg: #16181A; --surface: #1F2224; --text: #EDEDED; --muted: #A8ACAE;
-    --border: #33373A; --accent: #7FB5A6; --tint: #1E2B28; --focus: #A9D6CA; }
+    --border: #33373A; --accent: #7FB5A6; --tint: #1E2B28; --focus: #A9D6CA;
+    --blue-bg: #1B2533; --green-bg: #1C2B24; --red-bg: #34201D; }
 }
 * { box-sizing: border-box; }
 html { font-size: 18px; }
@@ -70,15 +72,33 @@ textarea { min-height: 64px; resize: vertical; }
 .bubble { border-radius: 18px; }
 .frame .tiles .tile { min-height: 40px; min-width: 0; padding: 6px 10px; font-size: .9rem; }
 
-/* food */
-.ladder { display: grid; gap: 10px; }
-.rung { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
-.rung .num { font-weight: 700; color: var(--muted); text-align: center; }
-.rung .goal { font-size: .8rem; font-weight: 650; color: var(--accent); margin-top: 4px; }
-.rung .worry { grid-column: 2 / 4; display: grid; grid-template-columns: repeat(2, minmax(0, 200px)); gap: 10px; }
-.done-btn { background: var(--surface); border: 2px solid var(--border); border-radius: 10px; padding: 10px 14px; min-height: 48px; white-space: nowrap; }
-.done-count { display: block; font-size: .8rem; color: var(--muted); text-align: center; margin-top: 2px; }
+/* food quest: exposure tracking + emotional thermometer */
+h4 { font-size: 1rem; margin: 22px 0 8px; }
+h4.sub { font-size: .95rem; margin: 14px 0 6px; color: var(--muted); }
+.story { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.qmap { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.qmap li { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; }
+.qmap .num { font-weight: 700; color: var(--muted); text-align: center; }
+.qmap .count { font-size: .85rem; color: var(--muted); white-space: nowrap; min-width: 6.5em; text-align: right; }
+.zone { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.zone select { width: auto; min-width: 5em; }
+.therm { display: grid; grid-template-columns: repeat(21, 1fr); gap: 4px; }
+.therm .tile { min-width: 0; min-height: 44px; padding: 8px 0; text-align: center; font-size: .85rem; }
+.therm .tile[aria-pressed="true"]::before { content: ""; }
+.therm .tile.t-blue, .therm .tile.t-blue[aria-pressed="true"] { background: var(--blue-bg); }
+.therm .tile.t-green, .therm .tile.t-green[aria-pressed="true"] { background: var(--green-bg); }
+.therm .tile.t-red, .therm .tile.t-red[aria-pressed="true"] { background: var(--red-bg); }
+.therm .tile[aria-pressed="true"] { border-color: var(--text); border-width: 3px; font-weight: 800; }
+.key { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .85rem; color: var(--muted); margin: 6px 0 2px; }
+.key span::before { content: ""; display: inline-block; width: .8em; height: .8em; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--border); }
+.key .k-blue::before { background: var(--blue-bg); }
+.key .k-green::before { background: var(--green-bg); }
+.key .k-red::before { background: var(--red-bg); }
+.track { overflow-x: auto; }
+.track table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+.track th, .track td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+.track th { color: var(--muted); font-weight: 600; }
 
 /* nav + footer */
 .nav { display: flex; gap: 10px; margin-top: 28px; }
@@ -99,10 +119,13 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   .agenda .step { font-size: .9rem; }
   .agenda .min { font-size: .75rem; }
   .scale { grid-template-columns: repeat(6, 1fr); }
-  .rung .worry { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 760px) {
+  .therm { grid-template-columns: repeat(7, 1fr); }
+  .story { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .tile, .card, .agenda button, .done-btn { transition: border-color .12s, background-color .12s; }
+  .tile, .card, .agenda button { transition: border-color .12s, background-color .12s; }
 }
 </style>
 </head>
@@ -145,7 +168,7 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     <div class="cards" data-group="card" data-max="1">
       <button class="card" data-value="comic"><strong>Comic</strong><span>A school day in 4 panels</span></button>
       <button class="card" data-value="picking"><strong>Skin picking map</strong><span>When, how often, and what else my hands could do</span></button>
-      <button class="card" data-value="food"><strong>Food quest</strong><span>One step at a time</span></button>
+      <button class="card" data-value="food"><strong>Food quest</strong><span>One step at a time, with the thermometer</span></button>
     </div>
 
     <div class="panel" data-card="comic" hidden>
@@ -182,8 +205,81 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
 
     <div class="panel" data-card="food" hidden>
       <h3>Food quest</h3>
-      <p class="hint">Change any step. Worry is optional.</p>
-      <div class="ladder" id="ladder"></div>
+      <div class="story">
+        <div><label class="field" for="qHero">Hero</label><input type="text" id="qHero" data-quest="hero" placeholder="Hero" maxlength="60"></div>
+        <div><label class="field" for="qVillain">Villain</label><input type="text" id="qVillain" data-quest="villain" placeholder="The worry" maxlength="60"></div>
+        <div><label class="field" for="qAlly">Ally</label><input type="text" id="qAlly" data-quest="ally" placeholder="Ally" maxlength="60"></div>
+      </div>
+
+      <h4>Quest map</h4>
+      <p class="hint">One step at a time. Change any step.</p>
+      <ol class="qmap" id="qmap"></ol>
+
+      <h4>Try a step</h4>
+      <p class="hint">Which step today?</p>
+      <div class="tiles" data-group="qStep" data-max="1" id="qStepTiles"></div>
+
+      <h4>How long</h4>
+      <div class="tiles" data-group="qLength" data-max="1">
+        <button class="tile" data-value="1 min">1 min</button>
+        <button class="tile" data-value="3 min">3 min</button>
+        <button class="tile" data-value="5 min">5 min</button>
+        <button class="tile" data-value="10 min">10 min</button>
+        <button class="tile" data-value="longer">longer</button>
+      </div>
+
+      <h4 id="qSupportsLabel">Ally moves I can use</h4>
+      <p class="hint">Pick up to 3.</p>
+      <div class="tiles" data-group="qSupports" data-max="3">
+        <button class="tile" data-value="cold water">cold water</button>
+        <button class="tile" data-value="something crunchy">something crunchy</button>
+        <button class="tile" data-value="putty or fidget">putty or fidget</button>
+        <button class="tile" data-value="slow breaths">slow breaths</button>
+        <button class="tile" data-value="music">music</button>
+        <button class="tile" data-value="hold something cold">hold something cold</button>
+        <button class="tile" data-value="something else">something else</button>
+      </div>
+      <div class="note" data-note="qSupports"></div>
+
+      <h4 id="qTemptedLabel">Villain tricks I might want to use</h4>
+      <p class="hint">Pick any that fit.</p>
+      <div class="tiles" data-group="qTempted" data-max="5">
+        <button class="tile" data-value="say I don't like it first">say I don't like it first</button>
+        <button class="tile" data-value="push it away">push it away</button>
+        <button class="tile" data-value="spit it out">spit it out</button>
+        <button class="tile" data-value="leave">leave</button>
+        <button class="tile" data-value="something else">something else</button>
+      </div>
+
+      <h4>Thermometer</h4>
+      <div class="zone">
+        <label for="zoneLow">My green zone goes from</label>
+        <select id="zoneLow" data-zone="zoneLow"></select>
+        <label for="zoneHigh">to</label>
+        <select id="zoneHigh" data-zone="zoneHigh"></select>
+      </div>
+      <div class="key"><span class="k-blue">shut down, far away</span><span class="k-green">my green zone</span><span class="k-red">worried, mad, too much</span></div>
+      <h4 class="sub">Before</h4>
+      <div class="tiles therm" data-group="qBefore" data-max="1"></div>
+      <h4 class="sub">Highest or lowest</h4>
+      <div class="tiles therm" data-group="qPeak" data-max="1"></div>
+      <h4 class="sub">End</h4>
+      <div class="tiles therm" data-group="qEnd" data-max="1"></div>
+
+      <h4>Did the ally moves help, or did I skip the villain tricks?</h4>
+      <div class="tiles" data-group="qHelped" data-max="1">
+        <button class="tile" data-value="yes">yes</button>
+        <button class="tile" data-value="some">some</button>
+        <button class="tile" data-value="not this time">not this time</button>
+      </div>
+
+      <div class="row">
+        <button class="btn" type="button" id="logTry">Log this try</button>
+        <span class="status" id="logStatus" aria-live="polite"></span>
+      </div>
+
+      <h4>Tracking sheet</h4>
+      <div class="track" id="track"></div>
     </div>
 
     <div class="nav">
@@ -241,8 +337,16 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
 <script>
 (function () {
   "use strict";
-  var KEY = "session-board-v1";
+  var KEY = "session-board-v2";
   var FEELINGS = ["sad", "worried", "tired", "annoyed", "okay", "something else"];
+  var STEPS = 8;
+  var TRIAL = ["qLength", "qSupports", "qTempted", "qBefore", "qPeak", "qEnd", "qHelped"];
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function signed(v) { var n = Number(v); return n > 0 ? "+" + n : String(n); }
 
   function fresh() {
     return {
@@ -251,12 +355,12 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
       card: [],
       comic: [0, 1, 2, 3].map(function () { return { what: "", thought: "", feeling: [] }; }),
       pickWhen: [], pickOften: [], pickInstead: [],
-      food: [
-        { name: "Frozen blueberries", done: 0, before: "", after: "" },
-        { name: "", done: 0, before: "", after: "" },
-        { name: "Kiwi", done: 0, before: "", after: "" },
-        { name: "Sushi", done: 0, before: "", after: "", goal: true }
-      ],
+      quest: {
+        hero: "", villain: "", ally: "", zoneLow: -3, zoneHigh: 3,
+        steps: Array.apply(null, Array(STEPS)).map(function () { return { name: "", done: 0 }; }),
+        log: []
+      },
+      qStep: [], qLength: [], qSupports: [], qTempted: [], qBefore: [], qPeak: [], qEnd: [], qHelped: [],
       last: [], tell: [], tryThis: []
     };
   }
@@ -305,39 +409,129 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     });
   }
 
-  function worrySelect(i, key, label) {
-    var opts = '<option value="">-</option>';
-    for (var n = 0; n <= 10; n++) { opts += '<option value="' + n + '">' + n + '</option>'; }
-    return '<div><label class="field" for="' + key + i + '">' + label + '</label>' +
-      '<select id="' + key + i + '" data-food="' + i + '" data-key="' + key + '">' + opts + '</select></div>';
+  // ---------- food quest: quest map, Personal Emotional Thermometer, Exposure Tracking
+  function times(n) { return n + (n === 1 ? " time" : " times"); }
+
+  function buildQuest() {
+    var q = state.quest;
+    ["hero", "villain", "ally"].forEach(function (k) {
+      document.querySelector('[data-quest="' + k + '"]').value = q[k];
+    });
+    var map = document.getElementById("qmap");
+    map.innerHTML = "";
+    q.steps.forEach(function (s, i) {
+      var li = document.createElement("li");
+      li.innerHTML = '<span class="num">' + (i + 1) + '</span>' +
+        '<input type="text" maxlength="120" data-step="' + i + '" aria-label="Step ' + (i + 1) + '" placeholder="' +
+        (i === STEPS - 1 ? "Goal" : "Step " + (i + 1)) + '">' +
+        '<span class="count" id="qcount' + i + '"></span>';
+      map.appendChild(li);
+      li.querySelector("input").value = s.name;
+    });
+    ["zoneLow", "zoneHigh"].forEach(function (k) {
+      var sel = document.getElementById(k), opts = "";
+      for (var n = -10; n <= 10; n++) { opts += '<option value="' + n + '">' + signed(n) + '</option>'; }
+      sel.innerHTML = opts;
+      sel.value = String(q[k]);
+    });
+    document.querySelectorAll(".therm").forEach(buildTherm);
+    buildStepTiles();
+    renderQuestCounts();
+    renderQuestLabels();
+    renderTrack();
   }
 
-  function buildLadder() {
-    var root = document.getElementById("ladder");
-    root.innerHTML = "";
-    state.food.forEach(function (s, i) {
-      var r = document.createElement("div");
-      r.className = "rung";
-      r.innerHTML =
-        '<div class="num">' + (i + 1) + '</div>' +
-        '<div><input type="text" aria-label="Step ' + (i + 1) + '" placeholder="Pick a food" data-food="' + i + '" data-key="name">' +
-        (s.goal ? '<div class="goal">Your goal</div>' : '') + '</div>' +
-        '<div><button type="button" class="done-btn" data-done="' + i + '">Mark done</button>' +
-        '<span class="done-count" id="count' + i + '"></span></div>' +
-        '<div class="worry">' + worrySelect(i, "before", "Worry before") + worrySelect(i, "after", "Worry after") + '</div>';
-      root.appendChild(r);
-      r.querySelector('[data-key="name"]').value = s.name;
-      r.querySelector('[data-key="before"]').value = s.before;
-      r.querySelector('[data-key="after"]').value = s.after;
-    });
-    renderCounts();
+  function buildTherm(el) {
+    var q = state.quest, html = "";
+    for (var n = -10; n <= 10; n++) {
+      var zone = n < q.zoneLow ? "t-blue" : (n > q.zoneHigh ? "t-red" : "t-green");
+      html += '<button type="button" class="tile ' + zone + '" data-value="' + n + '">' + signed(n) + '</button>';
+    }
+    el.innerHTML = html;
+    renderGroup(el);
   }
 
-  function renderCounts() {
-    state.food.forEach(function (s, i) {
-      var c = document.getElementById("count" + i);
-      if (c) { c.textContent = s.done ? "Done " + s.done + (s.done === 1 ? " time" : " times") : ""; }
+  function buildStepTiles() {
+    var el = document.getElementById("qStepTiles"), html = "";
+    state.quest.steps.forEach(function (s, i) {
+      if (s.name.trim()) {
+        html += '<button type="button" class="tile" data-value="' + i + '">' + (i + 1) + '. ' + esc(s.name.trim()) + '</button>';
+      }
     });
+    el.innerHTML = html || '<p class="hint">Add a step to the quest map first.</p>';
+    if (state.qStep.length && !state.quest.steps[+state.qStep[0]].name.trim()) { state.qStep = []; }
+    renderGroup(el);
+  }
+
+  function renderQuestCounts() {
+    state.quest.steps.forEach(function (s, i) {
+      var c = document.getElementById("qcount" + i);
+      if (c) { c.textContent = s.done ? "Done " + times(s.done) : ""; }
+    });
+  }
+
+  function renderQuestLabels() {
+    var q = state.quest;
+    document.getElementById("qSupportsLabel").textContent =
+      "Ally moves I can use" + (q.ally.trim() ? " (" + q.ally.trim() + ")" : "");
+    document.getElementById("qTemptedLabel").textContent =
+      "Villain tricks I might want to use" + (q.villain.trim() ? " (" + q.villain.trim() + ")" : "");
+  }
+
+  function renderTrack() {
+    var log = state.quest.log, el = document.getElementById("track");
+    if (!log.length) { el.innerHTML = '<p class="hint">No tries logged yet.</p>'; return; }
+    function num(v) { return v === "" ? "" : signed(v); }
+    el.innerHTML = '<table><thead><tr><th>Step</th><th>How long</th><th>Ally moves</th><th>Villain tricks</th>' +
+      '<th>Before</th><th>Highest or lowest</th><th>End</th><th>Helped</th></tr></thead><tbody>' +
+      log.map(function (t) {
+        return '<tr><td>' + (t.step + 1) + '. ' + esc(t.name) + '</td><td>' + esc(t.length) + '</td><td>' +
+          esc(t.supports.join(", ")) + '</td><td>' + esc(t.tempted.join(", ")) + '</td><td>' + num(t.before) +
+          '</td><td>' + num(t.peak) + '</td><td>' + num(t.end) + '</td><td>' + esc(t.helped) + '</td></tr>';
+      }).join("") + '</tbody></table>';
+  }
+
+  function logTry() {
+    var status = document.getElementById("logStatus");
+    if (!state.qStep.length) { status.textContent = "Pick a step first."; return; }
+    if (!state.qBefore.length && !state.qEnd.length) { status.textContent = "Tap a before or end number first."; return; }
+    var i = +state.qStep[0], step = state.quest.steps[i];
+    state.quest.log.push({
+      step: i, name: step.name.trim(), length: state.qLength[0] || "",
+      supports: state.qSupports.slice(), tempted: state.qTempted.slice(),
+      before: state.qBefore[0] || "", peak: state.qPeak[0] || "", end: state.qEnd[0] || "",
+      helped: state.qHelped[0] || ""
+    });
+    step.done += 1;
+    TRIAL.forEach(function (k) { state[k] = []; });
+    save();
+    document.querySelectorAll("[data-group]").forEach(renderGroup);
+    renderQuestCounts();
+    renderTrack();
+    buildTryTiles();
+    status.textContent = "Logged. Step " + (i + 1) + " done " + times(step.done) + ".";
+  }
+
+  // A setup link carries the quest in the URL fragment, which browsers never send to the server.
+  function importFromHash() {
+    var h = location.hash;
+    if (h.indexOf("#q=") !== 0) { return; }
+    try {
+      var b64 = h.slice(3).replace(/-/g, "+").replace(/_/g, "/");
+      while (b64.length % 4) { b64 += "="; }
+      var bin = atob(b64), bytes = new Uint8Array(bin.length);
+      for (var k = 0; k < bin.length; k++) { bytes[k] = bin.charCodeAt(k); }
+      var d = JSON.parse(new TextDecoder().decode(bytes)), q = state.quest;
+      if (typeof d.h === "string") { q.hero = d.h.slice(0, 60); }
+      if (typeof d.v === "string") { q.villain = d.v.slice(0, 60); }
+      if (typeof d.a === "string") { q.ally = d.a.slice(0, 60); }
+      if (Array.isArray(d.s)) {
+        d.s.slice(0, STEPS).forEach(function (n, i) { if (typeof n === "string") { q.steps[i].name = n.slice(0, 120); } });
+      }
+      if (!state.card.length) { state.card = ["food"]; }
+      save();
+    } catch (e) { /* a bad link changes nothing */ }
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
   }
 
   // ---------- group state helpers
@@ -384,8 +578,10 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
     if (state.pickWhen.length || state.pickInstead.length) {
       opts.push(instead ? "Use " + instead + " when my hands want to pick" : "Notice when my hands want to pick");
     }
-    var next = state.food.filter(function (s) { return s.name && !s.done; })[0];
-    if (next) { opts.push("Try " + next.name.toLowerCase() + " one time"); }
+    var next = state.quest.steps.filter(function (s) { return s.name.trim() && !s.done; })[0];
+    var last = state.quest.log[state.quest.log.length - 1];
+    if (last) { opts.push("Do quest step " + (last.step + 1) + " again at home"); }
+    else if (next) { opts.push("Try quest step: " + next.name.trim().toLowerCase()); }
     if (opts.length < 3) { opts.push("Draw one panel on a hard day"); }
     if (opts.length < 3) { opts.push("Rate my worry once a day"); }
     return opts.slice(0, 3);
@@ -426,15 +622,33 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
       if (state.pickInstead.length) { s.push("instead " + list(state.pickInstead)); }
       L.push("Skin picking: " + s.join("; ") + ".");
     }
-    var food = state.food.filter(function (f) { return f.name.trim() && (f.done || f.before !== "" || f.after !== ""); })
-      .map(function (f) {
-        var b = [f.name.trim()];
-        if (f.done) { b.push("done " + f.done + (f.done === 1 ? " time" : " times")); }
-        if (f.before !== "") { b.push("worry before " + f.before); }
-        if (f.after !== "") { b.push("after " + f.after); }
-        return b.join(", ");
+    var q = state.quest;
+    var story = [];
+    if (q.hero.trim()) { story.push("hero " + q.hero.trim()); }
+    if (q.villain.trim()) { story.push("villain " + q.villain.trim()); }
+    if (q.ally.trim()) { story.push("ally " + q.ally.trim()); }
+    if (story.length) { L.push("Quest story: " + story.join("; ") + "."); }
+    var map = q.steps.map(function (s, i) {
+      return s.name.trim() ? (i + 1) + ". " + s.name.trim() + (s.done ? " (done " + times(s.done) + ")" : "") : "";
+    }).filter(Boolean);
+    if (map.length) { L.push("Quest map (exposure hierarchy): " + map.join("; ") + "."); }
+    if (q.log.length) {
+      L.push("Exposure Tracking, Personal Emotional Thermometer -10 to +10, green zone " +
+        signed(q.zoneLow) + " to " + signed(q.zoneHigh) + ":");
+      q.log.forEach(function (t) {
+        var b = ["step " + (t.step + 1) + " " + t.name];
+        if (t.length) { b.push(t.length); }
+        if (t.supports.length) { b.push("sensory supports " + list(t.supports)); }
+        if (t.tempted.length) { b.push("tempted to " + list(t.tempted)); }
+        var r = [];
+        if (t.before !== "") { r.push("before " + signed(t.before)); }
+        if (t.peak !== "") { r.push("highest or lowest " + signed(t.peak)); }
+        if (t.end !== "") { r.push("end " + signed(t.end)); }
+        if (r.length) { b.push("thermometer " + r.join(", ")); }
+        if (t.helped) { b.push("resisted or used supports effectively: " + t.helped); }
+        L.push("- " + b.join("; ") + ".");
       });
-    if (food.length) { L.push("Food quest: " + food.join("; ") + "."); }
+    }
     if (state.last.length) { L.push("Last part: " + state.last[0] + "."); }
     if (state.tell.length) { L.push("Could tell: " + state.tell[0] + "."); }
     if (state.tryThis.length) { L.push("Try this week: " + state.tryThis[0].toLowerCase() + "."); }
@@ -445,9 +659,6 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   document.addEventListener("click", function (e) {
     var go = e.target.closest("[data-go]");
     if (go) { state.screen = go.dataset.go; save(); renderAll(); window.scrollTo({ top: 0 }); return; }
-
-    var done = e.target.closest("[data-done]");
-    if (done) { state.food[+done.dataset.done].done += 1; save(); renderCounts(); buildTryTiles(); return; }
 
     var tile = e.target.closest("[data-value]");
     var group = tile && tile.closest("[data-group]");
@@ -466,11 +677,30 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   document.addEventListener("input", function (e) {
     var t = e.target;
     if (t.dataset.comic !== undefined) { state.comic[+t.dataset.comic][t.dataset.key] = t.value; save(); }
-    if (t.dataset.food !== undefined) { state.food[+t.dataset.food][t.dataset.key] = t.value; save(); buildTryTiles(); }
+    if (t.dataset.quest !== undefined) { state.quest[t.dataset.quest] = t.value; save(); renderQuestLabels(); }
+    if (t.dataset.step !== undefined) { state.quest.steps[+t.dataset.step].name = t.value; save(); buildStepTiles(); buildTryTiles(); }
   });
   document.addEventListener("change", function (e) {
     var t = e.target;
-    if (t.tagName === "SELECT" && t.dataset.food !== undefined) { state.food[+t.dataset.food][t.dataset.key] = t.value; save(); }
+    if (t.dataset.zone !== undefined) {
+      var q = state.quest;
+      q[t.dataset.zone] = +t.value;
+      if (q.zoneLow > q.zoneHigh) {
+        if (t.dataset.zone === "zoneLow") { q.zoneHigh = q.zoneLow; } else { q.zoneLow = q.zoneHigh; }
+        document.getElementById("zoneLow").value = String(q.zoneLow);
+        document.getElementById("zoneHigh").value = String(q.zoneHigh);
+      }
+      save();
+      document.querySelectorAll(".therm").forEach(buildTherm);
+    }
+  });
+
+  document.getElementById("logTry").addEventListener("click", logTry);
+  window.addEventListener("hashchange", function () {
+    if (location.hash.indexOf("#q=") !== 0) { return; }
+    importFromHash();
+    buildQuest();
+    renderAll();
   });
 
   document.getElementById("copyBtn").addEventListener("click", function () {
@@ -502,9 +732,10 @@ details.summary summary { cursor: pointer; color: var(--muted); font-weight: 600
   });
 
   function init() {
+    importFromHash();
     buildScale(document.querySelector('[data-group="strength"]'), "strength");
     buildComic();
-    buildLadder();
+    buildQuest();
     renderAll();
   }
   init();
